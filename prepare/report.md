@@ -13,20 +13,49 @@ XXXXXX
 ### 参考[Intel的NVM模拟教程](https://software.intel.com/zh-cn/articles/how-to-emulate-persistent-memory-on-an-intel-architecture-server)模拟NVM环境，用fio等工具测试模拟NVM的性能并与磁盘对比（关键步骤结果截图）。
 （推荐Ubuntu 18.04LTS下配置，跳过内核配置，编译和安装步骤）
 
+以root权限用vim打开grub文件  
 ![1](./img/3.1.png)  
+
+打开后原grub文件是这样的  
 ![2](./img/3.2.png)  
+
+修改，在GRUB_CMDLINE_LINUX_DEFAULT中加入memmap=2G!8G，用:wq!保存并退出  
 ![3](./img/3.3.png)  
+
+为了方便创建超级用户root  
 ![4](./img/3.4.png)  
+
+启动配置文件  
 ![5](./img/3.5.png)  
+
+重启后，查看内存仿真  
 ![6](./img/3.6.png)  
+
+查看内核中是否内置了 DAX 和 PMEM  
 ![8](./img/3.8.png)
+
+安装包含 DAX 的文件系统，先创建文件夹  
 ![9](./img/3.9.png)  
+
+然后制作文件系统  
 ![10](./img/3.10.png)  
+
+映射，可以查看到pmem0  
 ![11](./img/3.11.png)  
-![12](./img/3.12.png)  
-![13](./img/3.13.png)  
+
+在NVM上用fio测试性能  
+![12](./img/3.12.png)
+
+得出结果  
+![13](./img/3.13.png)
+
+在磁盘上用fio测试性能  
 ![14](./img/3.14.png)  
+
+得出结果
 ![15](./img/3.15.png)  
+
+可以看到NVM比磁盘快很多  
 
 ### 使用[PMDK的libpmem库](http://pmem.io/pmdk/libpmem/)编写样例程序操作模拟NVM（关键实验结果截图，附上编译命令和简单样例程序）。
 （样例程序使用教程的即可，主要工作是编译安装并链接PMDK库）
