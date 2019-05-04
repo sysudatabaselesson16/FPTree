@@ -310,3 +310,23 @@ Commands:
 对数据库进行操作
 
 ## 4 实现时间计划
+
+```
+系统说明书，PAllocator实现并通过utility测试，LevelDB的使用以及测试，对应lycsb.cpp，p_allocator.cpp的实现和运行，utility_test.cpp的运行 --- 5/4晚前发布v1版本branch
+```
+
+此次任务主要是PAllocator的实现并通过测试和levelDB的使用和测试。
+
+了解ycsb：
+YCSB大体上分两个步，第一步是读取load文件，插入一定量的数据对数据库进行初始化。第二步是读取run文件，进行数据库相关操作。load和run文件的一条操作语句如下:
+
+``` 
+INSERT 6284781860667377211
+``` 
+
+上面INSERT表示插入操作，后面是键值。因为FPTreeDB键值对为8bytes-8bytes，所以只需取这个值的前8字节即可。为了简单起见，键和值取相同即可。
+
+但这次并不基于ycsb操作，而是采用接近ycsb的lycsb操作。
+
+## 5 实验进度：
+已完成levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。
