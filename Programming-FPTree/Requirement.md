@@ -31,7 +31,7 @@
 对于系统恢复，我们采取课本介绍的BulkLoading方式即可。  
 
 所以，实现上述5大基本操作，也就实现了大部分函数，系统就能正常运行。系统架构如下：  
-![FPTreeDB架构](../asset/FPTreeDB.png)
+![FPTreeDB架构](./asset/FPTreeDB.png)
 
 ## 说明
 只需根据我在代码中留下的注释TODO和下面说明进行填充实现，通过简单的单元测试就可以完成。本次实现的是FPTree的单线程版本，不需要做FPTree的日志机制，走通操作流程就行。  
@@ -130,7 +130,7 @@ bool FPTree::bulkLoading()
 
 #### 函数说明
 这是树重建的主要函数。在新建一个树的时候，先检查目标文件夹内有没有数据文件，遍历文件进行BulkLoading。没有数据文件则进行新树的生成。例子如下：  
-![](../asset/bulkLoading.png)
+![](./asset/bulkLoading.png)
 
 ---
 
@@ -140,12 +140,12 @@ bool FPTree::bulkLoading()
 ---
 ## KeyNode
 这个数据结构由一个代表键值和节点的索引组成，用于节点分裂时，将新生成的节点索引返回给上层节点插入记录。其用在插入操作和分裂操作中。如下图的插入操作:  
-![](../asset/insert.png)
+![](./asset/insert.png)
 
 ---
 ## InnerNode
 管理方法和书本的B+tree基本一致。这是FPTree中间索引节点，其不存放键值对数据信息。这个数据结构的内容已经给出，结构如下：  
-![](../asset/InnerNode.png)
+![](./asset/InnerNode.png)
 ### 节点元素细节
 通过对节点的合并和分裂操作，保证每个节点的元素个数限制在以下范围(FPTree的根少于d)：  
 key个数 : d <= m <= 2d </br>
@@ -199,7 +199,7 @@ KeyNode* InnerNode::insert(Key k, Value v)
 返回值为KeyNode，下层子节点分裂后生成新的节点，将节点索引以及代表键值返回给上层节点插入
 #### 函数说明
 这是InnerNode插入键值对的函数，不进行实际的键值对插入，通过递归调用其子节点插入，直至叶子结点进行实际的插入。对子节点分裂后返回的KeyNode值进行插入。例子如下：  
-![](../asset/insert.png)
+![](./asset/insert.png)
 
 #### 细节
 第一次插入或者只有一个叶子时，也只有一个中间节点，这时候需要特殊处理。形成两个叶子后插入正常进行。当节点元素多过限制时，进行节点分裂操作。
@@ -224,7 +224,7 @@ bool InnerNode::update(Key k, Value v)
 ---
 ## LeafNode
 这是整个FPTree存储数据的直接对象，所有键值对数据只存放于叶子节点中。所以叶子节点也是与NVM交互的对象，只要是操作PAllocator映射NVM文件后的虚拟地址，通过文件映射的方式操作相应数据文件。因为节点的操作对象是内存映射文件数据后的虚拟地址，所以关键是设置好NVM数据的指针。结构如下：  
-![](../asset/LeafNode.png)
+![](./asset/LeafNode.png)
 ### 节点元素细节
 为了减少对NVM的写操作，叶子的元素个数只需控制小于2d即可，没有元素就删除叶子。所以没有叶子节点的合并操作。但是叶子满了也需要分裂
 键值对个数 : 0 < m < 2d </br>
