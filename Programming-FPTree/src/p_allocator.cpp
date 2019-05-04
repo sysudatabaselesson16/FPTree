@@ -82,38 +82,39 @@ PAllocator::PAllocator()
 
 PAllocator::~PAllocator()
 {
-    persistCatalog();
-    for(int i = 1; i < maxFileId; i++){
-	pmem_unmap(fId2PmAddr[i], mapped_len);
+    persistCatalog(); //在操作完毕后要把数据结构写入NVM,方便下次取用
+    for (int i = 1; i < maxFileId; i++)
+    {
+        pmem_unmap(fId2PmAddr[i], mapped_len);
     }
     fId2PmAddr.clear();
     freeList.clear();
     maxFileId = 1;
     freeNum = 0;
     pAllocator = NULL;
+    //由于该项目的单例模式中并无法将pAllocator delete所以只把它置为NULL
     // TODO
 }
 
 // memory map all leaves to pmem address, storing them in the fId2PmAddr
 void PAllocator::initFilePmemAddr()
 {
-    int PMEM_LEN = LEAF_GROUP_HEAD + LEAF_GROUP_AMOUNT * (sizeof(Key) + sizeof(Value));
+    int PMEM_LEN = LEAF_GROUP_HEAD + LEAF_GROUP_AMOUNT * (sizeof(Key) + sizeof(Value)); //pmem应该分配大小,也就是leaf_group大小
     for (int i = 1; i < maxFileId; i++)
     {
         char *pmemaddr;
         int is_pmem;
         char ss[10];
-        sprintf(ss, "%d", i);
+        sprintf(ss, "%d", i); //数字转字符串构成数据文件名
         string data_path = DATA_DIR + ss;
         if ((pmemaddr = (char *)pmem_map_file(data_path.c_str(), PMEM_LEN, PMEM_FILE_CREATE, 0666, &mapped_len, &is_pmem)) == NULL)
         {
             perror("pmem_map_file");
             exit(1);
         }
-        
-        fId2PmAddr[i] = pmemaddr;
-        pmem_persist(pmemaddr, mapped_len);
-        
+
+        fId2PmAddr[i] = pmemaddr;           //保存虚拟地址跟fileId的映射
+        pmem_persist(pmemaddr, mapped_len); //持久化指针
     }
     // TODO
 }
@@ -134,21 +135,20 @@ char *PAllocator::getLeafPmemAddr(PPointer p)
 bool PAllocator::getLeaf(PPointer &p, char *&pmem_addr)
 {
     // TODO
-    if (freeNum >= 1 || newLeafGroup())
+    if (freeNum >= 1 || newLeafGroup()) //没freeNum就分配页
     {
         p.offset = freeList[freeNum - 1].offset;
- 	p.fileId = freeList[freeNum - 1].fileId;
-	
+        p.fileId = freeList[freeNum - 1].fileId;
+
         pmem_addr = fId2PmAddr[p.fileId];
-	
-	pmem_addr[ sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 1;
-	((uint64_t *)pmem_addr)[0] += 1;    
-	pmem_persist(pmem_addr, mapped_len);
-	pmem_addr = getLeafPmemAddr(p);
-	freeNum--;
+
+        pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 1; //将leaf_group中对应leaf的bitmap位置置为1,标志used, 这里计算bitmap位置的式子有点奇怪是因为offset内容是直接跟leaf在leaf_group位置挂钩的,要先算它是第几个leaf,再加上sizeof(uint64_t)
+        ((uint64_t *)pmem_addr)[0] += 1;                                                //leaf_group usednum++
+        pmem_persist(pmem_addr, mapped_len);
+        pmem_addr = getLeafPmemAddr(p); //最终要的是叶的虚拟地址
+        freeNum--;
         freeList.pop_back();
         return true;
-        
     }
     return false;
 }
@@ -156,21 +156,22 @@ bool PAllocator::getLeaf(PPointer &p, char *&pmem_addr)
 bool PAllocator::ifLeafUsed(PPointer p)
 {
     // TODO
-    if(ifLeafExist(p)){
-	char *pmem_addr = fId2PmAddr[p.fileId];
-	return pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] == 1;
+    if (ifLeafExist(p))
+    {
+        char *pmem_addr = fId2PmAddr[p.fileId];
+        return pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] == 1;
     }
-    
+
     return false;
 }
 
 bool PAllocator::ifLeafFree(PPointer p)
 {
     // TODO
-    for(int i = 0; i < freeList.size(); i++)
-	if(p == freeList[i]) 
-		return true;
-    
+    for (int i = 0; i < freeList.size(); i++)
+        if (p == freeList[i])
+            return true;
+
     return false;
 }
 
@@ -178,20 +179,22 @@ bool PAllocator::ifLeafFree(PPointer p)
 bool PAllocator::ifLeafExist(PPointer p)
 {
     // TODO
-	return p.fileId > 0 && p.fileId < maxFileId && p.offset >= LEAF_GROUP_HEAD && (p.offset - LEAF_GROUP_HEAD) / calLeafSize() < LEAF_GROUP_AMOUNT && ((p.offset - LEAF_GROUP_HEAD) % calLeafSize() == 0);
+    return p.fileId > 0 && p.fileId < maxFileId && p.offset >= LEAF_GROUP_HEAD && (p.offset - LEAF_GROUP_HEAD) / calLeafSize() < LEAF_GROUP_AMOUNT && ((p.offset - LEAF_GROUP_HEAD) % calLeafSize() == 0);
+    //判断fileId是否合法,offset是否合法,要注意offset合法应该是在leaf的初始位置
 }
 
 // free and reuse a leaf
 bool PAllocator::freeLeaf(PPointer p)
 {
     // TODO
-    if(ifLeafExist(p) && ifLeafUsed(p) && !ifLeafFree(p)){
-	char *pmem_addr = fId2PmAddr[p.fileId];
-	pmem_addr[ sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 0;
-	((uint64_t *)pmem_addr)[0] -= 1;
-	freeList.push_back(p);
-	freeNum ++ ;
-	return true;
+    if (ifLeafExist(p) && ifLeafUsed(p) && !ifLeafFree(p))
+    {
+        char *pmem_addr = fId2PmAddr[p.fileId];
+        pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 0;
+        ((uint64_t *)pmem_addr)[0] -= 1;
+        freeList.push_back(p);
+        freeNum++;
+        return true;
     }
     return false;
 }
@@ -199,6 +202,7 @@ bool PAllocator::freeLeaf(PPointer p)
 bool PAllocator::persistCatalog()
 {
     // TODO
+    //将数据结构写入NVM
     string allocatorCatalogPath = DATA_DIR + P_ALLOCATOR_CATALOG_NAME;
     string freeListPath = DATA_DIR + P_ALLOCATOR_FREE_LIST;
     ofstream allocatorCatalog(allocatorCatalogPath, ios::out | ios::binary);
@@ -229,7 +233,7 @@ bool PAllocator::newLeafGroup()
     sprintf(ss, "%d", maxFileId);
     string newpath = DATA_DIR + ss;
 
-    ofstream out(newpath, ios::binary | ios::out);
+    ofstream out(newpath, ios::binary | ios::out); //只是用来创建文件的,
     if (!out)
     {
         cout << "Cann't create new file." << endl;
@@ -237,10 +241,10 @@ bool PAllocator::newLeafGroup()
     }
     else
     {
-        
+
         out.close();
         int PMEM_LEN = LEAF_GROUP_HEAD + LEAF_GROUP_AMOUNT * calLeafSize();
-	
+
         char *pmemaddr;
         int is_pmem;
         size_t mapped_len;
@@ -249,9 +253,9 @@ bool PAllocator::newLeafGroup()
             cout << "pmem_map_file" << endl;
             return false;
         }
-        
+
         fId2PmAddr[maxFileId] = pmemaddr;
-	pmem_memset(pmemaddr, 0, sizeof(Byte), mapped_len);
+        pmem_memset(pmemaddr, 0, sizeof(Byte), mapped_len);
         pmem_persist(pmemaddr, mapped_len);
         freeNum += LEAF_GROUP_AMOUNT;
         for (int i = 0; i < LEAF_GROUP_AMOUNT; i++)
