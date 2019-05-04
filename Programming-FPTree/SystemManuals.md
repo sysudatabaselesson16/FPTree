@@ -79,6 +79,18 @@
 
 这是整个键值存储系统的接口类
 
+#### FPTree::FPTree(uint64_t t_degree)
+
+构造函数
+
+#### FPTree::~FPTree()
+
+析构函数
+
+#### void FPTree::recursiveDelete(Node* n)
+
+删除整棵树，被析构函数调用
+
 #### bool FPTree::bulkLoading() {
 
 这是重建树的主要函数  
@@ -136,6 +148,14 @@
 这是FPTree中间索引节点，其不存放键值对数据信息，结构如下：
 
 ![InnerNode](./asset/InnerNode.png)
+
+#### InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot)
+
+构造函数
+
+#### InnerNode::~InnerNode()
+
+析构函数
 
 #### int InnerNode::findIndex(const Key& k) 
 
@@ -221,6 +241,18 @@
 
 ![LeafNode](./asset/LeafNode.png)
 
+#### LeafNode::LeafNode(FPTree* t) && LeafNode::LeafNode(PPointer p, FPTree* t) 
+
+构造函数
+
+#### LeafNode::~LeafNode()
+
+析构函数
+
+#### void LeafNode::printNode()
+
+打印节点
+
 #### KeyNode* LeafNode::insert(const Key& k, const Value& v)
 
 键值对插入
@@ -282,7 +314,57 @@
 2. catelog：| maxFileId(8 bytes) | freeNum(8 bytes) | treeStartLeaf(PPointer) |
 3. freeList：| (fId, offset)1, ..., (fId)N |
 
-#### 3.5.2 
+#### 3.5.2 类描述
+
+此类是单例模式，一次只能打开一个FPTree
+
+##### PAllocator::PAllocator()
+
+构造函数
+
+读取NVM非意识性内存中的catlog和freeList文件，载入上次运行结束的状态
+
+##### PAllocator::~PAllocator()
+
+析构函数
+
+解除虚拟地址和fileId之间的映射关系，将pAllocator指为NULL
+
+##### void PAllocator::initFilePmemAddr()
+
+载入上一次状态后根据fileID映射到虚拟地址
+
+##### char *PAllocator::getLeafPmemAddr(PPointer p)
+
+获取一个叶节点的虚拟地址
+
+##### bool PAllocator::getLeaf(PPointer &p, char *&pmem_addr)
+
+获取一个叶节点
+
+##### bool PAllocator::ifLeafUsed(PPointer p)
+
+判断叶节点是否被使用
+
+##### bool PAllocator::ifLeafFree(PPointer p)
+
+判断叶节点是否空闲
+
+##### bool PAllocator::ifLeafExist(PPointer p)
+
+判断叶节点是否存在
+
+##### bool PAllocator::freeLeaf(PPointer p)
+
+释放叶节点
+
+##### bool PAllocator::persistCatalog()
+
+写入Catalog和freeList进入文件
+
+##### bool PAllocator::newLeafGroup()
+
+创建一个新的LeafGroup
 
 ### 3.6 ycsb
 
