@@ -79,33 +79,61 @@
 
 这是整个键值存储系统的接口类
 
-bool FPTree::bulkLoading() 
-这是重建树的主要函数  先检查目标文件夹内有没有数据文件，遍历文件进行BulkLoading，没有数据文件则进行新树的生成
+#### FPTree::FPTree(uint64_t t_degree)
+
+构造函数
+
+#### FPTree::~FPTree()
+
+析构函数
+
+#### void FPTree::recursiveDelete(Node* n)
+
+删除整棵树，被析构函数调用
+
+#### bool FPTree::bulkLoading() {
+
+这是重建树的主要函数  
+先检查目标文件夹内有没有数据文件，遍历文件进行BulkLoading  
+没有数据文件则进行新树的生成
 
 ![bulkLoading](./asset/bulkLoading.png)
 
-InnerNode* FPTree::getRoot()
+#### InnerNode* FPTree::getRoot()
+
 获得根节点
 
-void FPTree::changeRoot(InnerNode* newRoot)
+#### void FPTree::changeRoot(InnerNode* newRoot)
+
 产生新的根节点
 
-void FPTree::printTree()
+#### void FPTree::printTree()
+
 打印树
 
-FPTree::insert(Key k, Value v)
+#### FPTree::insert(Key k, Value v)
+
 增加数据
 
 直接调用节点的函数
 
-bool FPTree::remove(Key k)
-删除数据，直接调用节点的函数
+#### bool FPTree::remove(Key k)
 
-bool FPTree::update(Key k, Value v)
-更新数据，直接调用节点的函数
+删除数据
 
-Value FPTree::find(Key k)
-查找数据，直接调用节点的函数
+直接调用节点的函数
+
+#### bool FPTree::update(Key k, Value v)
+
+更新数据
+
+直接调用节点的函数
+
+#### Value FPTree::find(Key k)
+
+查找数据
+
+直接调用节点的函数
 
 ### 3.2 KeyNode
 
@@ -121,61 +149,88 @@ Value FPTree::find(Key k)
 
 ![InnerNode](./asset/InnerNode.png)
 
-int InnerNode::findIndex(const Key& k) 
+#### InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot)
+
+构造函数
+
+#### InnerNode::~InnerNode()
+
+析构函数
+
+#### int InnerNode::findIndex(const Key& k) 
+
 二分查找目标子节点
 
-void InnerNode::insertNonFull(const Key& k, Node* const& node)
+#### void InnerNode::insertNonFull(const Key& k, Node* const& node)
+
 节点不满直接插入
 
-KeyNode* InnerNode::insert(const Key& k, const Value& v)
+#### KeyNode* InnerNode::insert(const Key& k, const Value& v)
+
 键值对插入
 
-KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) 
+#### KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) 
+
 插入叶子节点
 
-KeyNode* InnerNode::split()
+#### KeyNode* InnerNode::split()
+
 分裂满了的节点
 
-bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete)、
+#### bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete)、
+
 键值对删除
 
-void InnerNode::getBrother(const int& index, InnerNode* const& parent, InnerNode* &leftBro, InnerNode* &rightBro)
+#### void InnerNode::getBrother(const int& index, InnerNode* const& parent, InnerNode* &leftBro, InnerNode* &rightBro)
+
 获得中间节点的左右兄弟节点。如果左右兄弟都存在，统一处理右兄弟。
 
-void InnerNode::mergeParentLeft(InnerNode* const& parent, InnerNode* const& leftBro)
+#### void InnerNode::mergeParentLeft(InnerNode* const& parent, InnerNode* const& leftBro)
+
 与父亲节点以及左兄弟合并
 
-void InnerNode::mergeParentRight(InnerNode* const& parent, InnerNode* const& rightBro)
+#### void InnerNode::mergeParentRight(InnerNode* const& parent, InnerNode* const& rightBro)
+
 与父亲节点以及右兄弟合并
 
-void InnerNode::redistributeLeft(const int& index, InnerNode* const& leftBro, InnerNode* const& parent)
+#### void InnerNode::redistributeLeft(const int& index, InnerNode* const& leftBro, InnerNode* const& parent)
+
 与左兄弟重分布
 
-void InnerNode::redistributeRight(const int& index, InnerNode* const& rightBro, InnerNode* const& parent)
+#### void InnerNode::redistributeRight(const int& index, InnerNode* const& rightBro, InnerNode* const& parent)
+
 与右兄弟重分布
 
-void InnerNode::mergeLeft(InnerNode* const& leftBro, const Key& k)
+#### void InnerNode::mergeLeft(InnerNode* const& leftBro, const Key& k)
+
 与左兄弟合并
 
-void InnerNode::mergeRight(InnerNode* const& rightBro, const Key& k)
+#### void InnerNode::mergeRight(InnerNode* const& rightBro, const Key& k)
+
 与右兄弟合并
 
-void InnerNode::removeChild(const int& keyIdx, const int& childIdx)
+#### void InnerNode::removeChild(const int& keyIdx, const int& childIdx)
+
 删除儿子
 
-bool InnerNode::update(const Key& k, const Value& v)
+#### bool InnerNode::update(const Key& k, const Value& v)
+
 键值对修改
 
-Value InnerNode::find(const Key& k)
+#### Value InnerNode::find(const Key& k)
+
 键值对查询
 
-Node* InnerNode::getChild(const int& idx)
+#### Node* InnerNode::getChild(const int& idx)
+
 获得儿子
 
-Key InnerNode::getKey(const int& idx)
+#### Key InnerNode::getKey(const int& idx)
+
 获得key
 
-void InnerNode::printNode()
+#### void InnerNode::printNode()
+
 打印节点
 
 ### 3.4 LeafNode
@@ -186,43 +241,68 @@ void InnerNode::printNode()
 
 ![LeafNode](./asset/LeafNode.png)
 
-KeyNode* LeafNode::insert(const Key& k, const Value& v)
+#### LeafNode::LeafNode(FPTree* t) && LeafNode::LeafNode(PPointer p, FPTree* t) 
+
+构造函数
+
+#### LeafNode::~LeafNode()
+
+析构函数
+
+#### void LeafNode::printNode()
+
+打印节点
+
+#### KeyNode* LeafNode::insert(const Key& k, const Value& v)
+
 键值对插入
 
-void LeafNode::insertNonFull(const Key& k, const Value& v)
+#### void LeafNode::insertNonFull(const Key& k, const Value& v)
+
 节点不满直接插入
 
-KeyNode* LeafNode::split()
+#### KeyNode* LeafNode::split()
+
 分裂
 
-Key LeafNode::findSplitKey()
+#### Key LeafNode::findSplitKey()
+
 找到中间值的key
 
-int LeafNode::getBit(const int& idx)
+#### int LeafNode::getBit(const int& idx)
+
 得到bit
 
-Key LeafNode::getKey(const int& idx)
+#### Key LeafNode::getKey(const int& idx)
+
 得到key
 
-Value LeafNode::getValue(const int& idx)
+#### Value LeafNode::getValue(const int& idx)
+
 得到值
 
-PPointer LeafNode::getPPointer()
+#### PPointer LeafNode::getPPointer()
+
 得到指针
 
-bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete)
+#### bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete)
+
 键值对删除
 
-bool LeafNode::update(const Key& k, const Value& v)
+#### bool LeafNode::update(const Key& k, const Value& v)
+
 键值对修改
 
-Value LeafNode::find(const Key& k)
+#### Value LeafNode::find(const Key& k)
+
 键值对查询
 
-int LeafNode::findFirstZero() 
+#### int LeafNode::findFirstZero() 
+
 找到第一个空节点
 
-void LeafNode::persist()
+#### void LeafNode::persist()
+
 保存真个叶子
 
 ### 3.5 PAllocator
@@ -234,7 +314,57 @@ void LeafNode::persist()
 2. catelog：| maxFileId(8 bytes) | freeNum(8 bytes) | treeStartLeaf(PPointer) |
 3. freeList：| (fId, offset)1, ..., (fId)N |
 
-#### 3.5.2 
+#### 3.5.2 类描述
+
+此类是单例模式，一次只能打开一个FPTree
+
+##### PAllocator::PAllocator()
+
+构造函数
+
+读取NVM非意识性内存中的catlog和freeList文件，载入上次运行结束的状态
+
+##### PAllocator::~PAllocator()
+
+析构函数
+
+解除虚拟地址和fileId之间的映射关系，将pAllocator指为NULL
+
+##### void PAllocator::initFilePmemAddr()
+
+载入上一次状态后根据fileID映射到虚拟地址
+
+##### char *PAllocator::getLeafPmemAddr(PPointer p)
+
+获取一个叶节点的虚拟地址
+
+##### bool PAllocator::getLeaf(PPointer &p, char *&pmem_addr)
+
+获取一个叶节点
+
+##### bool PAllocator::ifLeafUsed(PPointer p)
+
+判断叶节点是否被使用
+
+##### bool PAllocator::ifLeafFree(PPointer p)
+
+判断叶节点是否空闲
+
+##### bool PAllocator::ifLeafExist(PPointer p)
+
+判断叶节点是否存在
+
+##### bool PAllocator::freeLeaf(PPointer p)
+
+释放叶节点
+
+##### bool PAllocator::persistCatalog()
+
+写入Catalog和freeList进入文件
+
+##### bool PAllocator::newLeafGroup()
+
+创建一个新的LeafGroup
 
 ### 3.6 ycsb
 
@@ -263,22 +393,18 @@ Commands:
 
 ## 4 实现时间计划
 
-```
-系统说明书，PAllocator实现并通过utility测试，LevelDB的使用以及测试，对应lycsb.cpp，p_allocator.cpp的实现和运行，utility_test.cpp的运行 --- 5/4晚前发布v1版本branch
-```
-
-此次任务主要是PAllocator的实现并通过测试和levelDB的使用和测试。
-
-了解ycsb：
-YCSB大体上分两个步，第一步是读取load文件，插入一定量的数据对数据库进行初始化。第二步是读取run文件，进行数据库相关操作。load和run文件的一条操作语句如下:
-
-``` 
-INSERT 6284781860667377211
-``` 
-
-上面INSERT表示插入操作，后面是键值。因为FPTreeDB键值对为8bytes-8bytes，所以只需取这个值的前8字节即可。为了简单起见，键和值取相同即可。
-
-但这次并不基于ycsb操作，而是采用接近ycsb的lycsb操作。
+| 内容                            | 时间             |
+| ------------------------------- | ---------------- |
+| 系统说明书                      | 5/4前 (后续更新) |
+| PAllocator实现并通过utility测试 | 5/4前            |
+| LevelDB的使用以及测试           | 5/4前            |
+| FPTreeDB插入操作并通过相关测试  | 5/11前           |
+| FPTreeDB重载操作并通过相关测试  | 5/11前           |
+| FPTreeDB查询操作并通过相关测试  | 5/18前           |
+| FPTreeDB更新操作并通过相关测试  | 5/18前           |
+| FPTreeDB删除操作并通过相关测试  | 5/31前           |
+| FPTreeDB所有剩下实现以及测试    | 5/31前           |
 
 ## 5 实验进度：
 已完成levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。
+
