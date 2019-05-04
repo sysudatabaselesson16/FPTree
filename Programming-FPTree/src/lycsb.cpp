@@ -5,7 +5,7 @@
 #define VALUE_LEN 8
 using namespace std;
 
-const string workload = "";
+const string workload = "../workloads";
 
 const string load = workload + "220w-rw-50-50-load.txt"; // TODO: the workload_load filename
 const string run  = workload + "220w-rw-50-50-run.txt"; // TODO: the workload_run filename
@@ -33,7 +33,7 @@ int main()
 
     printf("Load phase begins \n");
     // TODO: read the ycsb_load and store
-    ycsb_load = fopen("/home/lucky1/Desktop/workloads/220w-rw-50-50-load.txt", "r"); 
+    ycsb_load = fopen(load, "r"); 
     char op[7];
     if (ycsb_load == NULL) return 0;
     /*int flag = 0, file_row = 0;
@@ -70,7 +70,7 @@ int main()
     inserted = 0;		
 
     // TODO:read the ycsb_run and store
-    ycsb_run = fopen("/home/lucky1/Desktop/workloads/220w-rw-50-50-run.txt", "r"); 
+    ycsb_run = fopen(run, "r"); 
     char op1[7];
     if (ycsb_run == NULL) return 0;
     for (t = 0; t < 2200000; t++) {
@@ -92,7 +92,7 @@ int main()
 		}
         else {
 	    leveldb::Status s2 = db->Get(leveldb::ReadOptions(), leveldb::Slice((char*)&key[t], KEY_LEN), &val);
-			if (!s2.ok()) printf("Get failed!");
+	    if (!s2.ok()) printf("Get failed!");
         }
     }
 	clock_gettime(CLOCK_MONOTONIC, &finish);
