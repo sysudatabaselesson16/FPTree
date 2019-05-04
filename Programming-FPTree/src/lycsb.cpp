@@ -34,7 +34,7 @@ int main()
     printf("Load phase begins \n");
     // TODO: read the ycsb_load and store
     ycsb_load = fopen(load, "r"); 
-    char op[7];
+    char op[7];//load the operations
     if (ycsb_load == NULL) return 0;
     /*int flag = 0, file_row = 0;
     while(!feof(ycsb_load)){ 
@@ -52,10 +52,11 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: load the workload in LevelDB
-    for (t = 0; t < 2200000; t++) {
+    for (t = 0; t < 2200000; t++) {//record the number of insert
         if (ifInsert[t]) {
 	    inserted++;
 	}
+    //write operation
     leveldb::Status s = db->Put(write_options, leveldb::Slice((char*)&key[t], KEY_LEN), leveldb::Slice((char*)&key[t], VALUE_LEN));
     if (!s.ok()) printf("put failed!");
     }
@@ -83,7 +84,7 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: operate the levelDB
-    string val;
+    string val;//the par of read operation
     for (t = 0; t < 2200000; t++) {
         if (ifInsert[t]) {
 	    inserted++;
