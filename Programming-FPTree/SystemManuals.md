@@ -275,6 +275,31 @@
 
 ### 3.5 PAllocator
 
+
+
 ### 3.6 ycsb
+
+这是一个键值数据库性能测试的benchmark
+
+其中的命令格式:
+
+```
+Commands:
+  read key [field1 field2 ...] - Read a record
+  scan key recordcount [field1 field2 ...] - Scan starting at key
+  insert key name1=value1 [name2=value2 ...] - Insert a new record
+  update key name1=value1 [name2=value2 ...] - Update a record
+  delete key - Delete a record
+  table [tablename] - Get or [set] the name of the table
+  quit - Quit
+``` 
+
+#### 3.6.1 第一步: 读取load文件
+
+初始化数据库
+
+#### 3.6.2 第二步: 读取run文件
+
+对数据库进行操作
 
 ## 4 实现时间计划
