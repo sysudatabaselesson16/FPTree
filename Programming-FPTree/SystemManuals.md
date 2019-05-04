@@ -275,7 +275,14 @@
 
 ### 3.5 PAllocator
 
+这是NVM文件管理的主要对象，其负责分配LeafNode在NVM中的空间，映射数据文件并返回虚拟地址给LeafNode使用。其管理的叶子文件的粒度是一个LeafGroup，一个LeafGroup由多个叶子以及一个数据头组成，数据头由一个8字节的当前LeafGroup使用叶子数和叶子槽的bitmap，bitmap为了简单使用1个byte指明一个槽位。
 
+#### 3.5.1 主要数据文件
+1. LeafGroup结构：| usedNum(8 bytes) | bitmap(n bytes) | Leaf1 | ... | leafN |
+2. catelog：| maxFileId(8 bytes) | freeNum(8 bytes) | treeStartLeaf(PPointer) |
+3. freeList：| (fId, offset)1, ..., (fId)N |
+
+#### 3.5.2 
 
 ### 3.6 ycsb
 
