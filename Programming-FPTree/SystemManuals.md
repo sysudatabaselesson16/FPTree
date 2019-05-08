@@ -406,5 +406,11 @@ Commands:
 | FPTreeDB所有剩下实现以及测试    | 5/31前           |
 
 ## 5 实验进度：
-已完成levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。
+已完成levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。（5/4前）  
+  
+FPTreeDB插入操作：  
+主要函数实现：  
+
+FPTreeDB重载操作：  
+主要函数实现：
 
