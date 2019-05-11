@@ -178,6 +178,18 @@ bool InnerNode::update(const Key &k, const Value &v)
 Value InnerNode::find(const Key &k)
 {
     // TODO
+    InnerNode *temp = this;
+    while (1)
+    {
+        int idx = temp->findIndex(k);
+        Node *tt = temp->getChild(idx);
+        if (tt == NULL)
+            return MAX_VALUE;
+        if (tt->ifLeaf())
+            return tt->find(k);
+        else
+            temp = tt;
+    }
     return MAX_VALUE;
 }
 
@@ -185,7 +197,9 @@ Value InnerNode::find(const Key &k)
 Node *InnerNode::getChild(const int &idx)
 {
     // TODO
-    return NULL;
+    if (idx < 0 || idx >= this->nChild)
+        return NULL;
+    return this->childrens[idx];
 }
 
 // get the key of this InnerNode
@@ -296,7 +310,7 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
     // TODO
-    if (this->n == this->degree * 2 - 1)
+    if (this->n == this->degree * 2)
         newChild = this->split();
     this->insertNonFull(k, v);
     return newChild;
@@ -306,10 +320,7 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 void LeafNode::insertNonFull(const Key &k, const Value &v)
 {
     // TODO
-    int i;
-    for (i = 0; i < this->degree * 2; i++)
-        if (!this->getBit(i))
-            break;
+    int i = findFirstZero();
     this->bitmap[i / 8] |= (1 << (7 - i % 8));
     this->kv[i].k = k;
     this->kv[i].v = v;
@@ -399,6 +410,9 @@ bool LeafNode::update(const Key &k, const Value &v)
 Value LeafNode::find(const Key &k)
 {
     // TODO
+    for (int i = 0; i < this->degree * 2; i++)
+        if (this->getBit(i) && this->getKey(i) == k)
+            return this->getValue(i);
     return MAX_VALUE;
 }
 
@@ -406,6 +420,10 @@ Value LeafNode::find(const Key &k)
 int LeafNode::findFirstZero()
 {
     // TODO
+    int i;
+    for (i = 0; i < this->degree * 2; i++)
+        if (!this->getBit(i))
+            return i;
     return -1;
 }
 
