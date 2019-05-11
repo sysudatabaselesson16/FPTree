@@ -68,6 +68,7 @@ TEST(FPTreeTest, InsertOneLeaf) {
     removeFile();
 }
 
+/*
 TEST(FPTreeTest, UpdateTest) {
     FPTree *tree = new FPTree(2);
     for (int i = 1; i <= LEAF_DEGREE; i++) {
@@ -236,3 +237,4 @@ TEST(InnerNodeTest, MergeTest) {
     EXPECT_EQ(tree->getRoot()->getChildNum(), 4);
     removeFile();
 }
+*/

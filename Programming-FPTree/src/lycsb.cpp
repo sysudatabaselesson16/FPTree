@@ -1,6 +1,5 @@
 #include <leveldb/db.h>
 #include <string>
-//#include <time.h>
 
 #define KEY_LEN 8
 #define VALUE_LEN 8
@@ -53,11 +52,11 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: load the workload in LevelDB
-    for (t = 0; t < 2200000; t++) {
-        if (ifInsert[t]) {//record the number of insert
+    for (t = 0; t < 2200000; t++) {//record the number of insert
+        if (ifInsert[t]) {
 	    inserted++;
 	}
-    //write operations
+    //write operation
     leveldb::Status s = db->Put(write_options, leveldb::Slice((char*)&key[t], KEY_LEN), leveldb::Slice((char*)&key[t], VALUE_LEN));
     if (!s.ok()) printf("put failed!");
     }
@@ -85,7 +84,7 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: operate the levelDB
-    string val;
+    string val;//the par of read operation
     for (t = 0; t < 2200000; t++) {
         if (ifInsert[t]) {
 	    inserted++;

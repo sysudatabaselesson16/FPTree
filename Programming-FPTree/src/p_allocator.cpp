@@ -123,7 +123,7 @@ void PAllocator::initFilePmemAddr()
 char *PAllocator::getLeafPmemAddr(PPointer p)
 {
     // TODO
-    if (ifLeafExist(p) && ifLeafFree(p))
+    if (ifLeafExist(p))
     {
         return (fId2PmAddr[p.fileId] + p.offset);
     }
