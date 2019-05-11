@@ -13,39 +13,30 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
     this->isRoot = _isRoot;
     this->nKeys = 0;
     this->nChild = 0;
-    this->keys = NULL;
-    Node *temp;
-    this->childrens = &temp;
+    this->keys = new Key [LEAF_DEGREE * 2 + 2];
+    this->childrens = new Node *[LEAF_DEGREE * 2 + 2];
 }
 
 // delete the InnerNode
 InnerNode::~InnerNode()
 {
     // DONIG
-    for (int i = 0; i < this->nChild; i++)
-    {
-        delete this->childrens[i];
-    }
-    delete this->childrens;
-    delete this->keys;
 }
 
 // binary search the first key in the innernode larger than input key
 int InnerNode::findIndex(const Key &k)
 {
     // TODO
-    int from = 0, to = this->nKeys - 1;
-    if (k >= this->keys[to])
-        return this->nKeys;
-    while (from <= to)
-    {
-        if (to == 0 || this->keys[to - 1] <= k)
-            return to;
-        int mid = (from + to) / 2;
-        if (this->keys[mid] > k)
-            to = mid;
-        else if (this->keys[mid] < k)
-            from = mid + 1;
+    int from = 0, to = nKeys - 1;
+    if(k < this->keys[0])
+	return 0;
+    if(k >= this->keys[to])return to + 1;
+    while(from <= to){
+	int mid = (from + to) / 2;
+        if(keys[to - 1] < k) return to;
+	if(keys[mid] < k) from = mid;
+	else if(keys[mid] > k) to = mid;
+	else if(keys[mid] == k)return mid + 1;
     }
 }
 
@@ -99,14 +90,12 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
         }
         return newChild;
     }
-
     // 2.recursive insertion
     // DOING
     int temp = findIndex(k);
     newChild = this->childrens[temp]->insert(k, v);
     if (newChild != NULL)
         insertNonFull(newChild->key, newChild->node);
-    newChild = NULL;
     if (nKeys == 2 * this->degree + 1)
     {
         if (this->isRoot)
@@ -117,10 +106,6 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
             temp->insertNonFull(k, (Node *)this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
-        }
-        else
-        {
-            newChild = split();
         }
     }
 
@@ -145,6 +130,7 @@ KeyNode *InnerNode::insertLeaf(const KeyNode &leaf)
         {
             this->childrens[this->nChild++] = leaf.node;
             this->keys[this->nKeys++] = leaf.key;
+
         }
         return newChild;
     }
@@ -201,8 +187,8 @@ KeyNode *InnerNode::split()
     newChild->node = (Node *)temp;
     this->nKeys = this->degree;
     this->nChild = this->degree + 1;
-    temp->nKeys = this->degree;
-    temp->nChild = this->degree + 1;
+    temp->nKeys = 0;
+    temp->nChild = 0;
     for (int i = 0; i <= this->degree; i++)
     {
         temp->insertNonFull(this->keys[i + this->degree], this->childrens[i + this->degree + 1]);
@@ -417,9 +403,10 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
     // TODO
+    this->insertNonFull(k, v);
     if (this->n == this->degree * 2)
         newChild = this->split();
-    this->insertNonFull(k, v);
+    
     return newChild;
 }
 
@@ -443,9 +430,10 @@ KeyNode *LeafNode::split()
 
     LeafNode *temp = new LeafNode(this->tree);
     int i;
-    for (i = 0; this->kv[i].k <= mid_key; i++)
+    for (i = 0; this->kv[i].k < mid_key; i++)
         ;
-    for (; i < this->n; i++)
+    int tn = this->n;
+    for (; i < tn; i++)
     {
         temp->insertNonFull(this->kv[i].k, this->kv[i].v);
         this->bitmap[i / 8] &= !(1 << (7 - i % 8));
@@ -455,6 +443,11 @@ KeyNode *LeafNode::split()
     temp->prev = this;
     newChild->key = mid_key;
     newChild->node = temp;
+    PPointer pp;
+    pp.fileId = this->pNext[0].fileId;
+    pp.offset = this->pNext[0].offset;
+    this->pNext[0] = temp->pPointer;
+    temp->pNext[0] = pp;
     return newChild;
 }
 
@@ -570,6 +563,7 @@ FPTree::FPTree(uint64_t t_degree)
     FPTree *temp = this;
     this->root = new InnerNode(t_degree, temp, true);
     this->degree = t_degree;
+    PAllocator::getAllocator();
     bulkLoading();
 }
 
@@ -640,6 +634,7 @@ void FPTree::printTree()
 bool FPTree::bulkLoading()
 {
     // TODO
+    if(PAllocator::getAllocator()->getMaxFileId() == 1) return false;
     PPointer temp = PAllocator::getAllocator()->getStartPointer();
     while (temp.fileId != 0)
     {
