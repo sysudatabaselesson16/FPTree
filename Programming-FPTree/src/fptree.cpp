@@ -12,6 +12,8 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
     this->isRoot = _isRoot;
     this->nKeys = 0;
     this->nChild = 0;
+    this->keys = NULL;
+    this->childrens = NULL;
 }
 
 // delete the InnerNode
@@ -24,7 +26,19 @@ InnerNode::~InnerNode()
 int InnerNode::findIndex(const Key &k)
 {
     // TODO
-    return 0;
+    int from = 0, to = this->nKeys - 1;
+    if (k >= this->keys[to])
+        return this->nKeys;
+    while (from <= to)
+    {
+        if (to == 0 || this->keys[to - 1] <= k)
+            return to;
+        int mid = (from + to) / 2;
+        if (this->keys[mid] > k)
+            to = mid;
+        else if (this->keys[mid] < k)
+            from = mid + 1;
+    }
 }
 
 // insert the node that is assumed not full
@@ -219,18 +233,37 @@ bool InnerNode::update(const Key &k, const Value &v)
 Value InnerNode::find(const Key &k)
 {
     // TODO
+    InnerNode *temp = this;
+    while (1)
+    {
+        int idx = temp->findIndex(k);
+        Node *tt = temp->getChild(idx);
+        if (tt == NULL)
+            return MAX_VALUE;
+        if (tt->ifLeaf())
+            return tt->find(k);
+        else
+            temp = tt;
+    }
     return MAX_VALUE;
 }
 
 // get the children node of this InnerNode
 Node *InnerNode::getChild(const int &idx)
 {
+<<<<<<< HEAD
     // DOING
     if (idx < this->nChild)
     {
         return this->childrens[idx];
     }
     return NULL;
+=======
+    // TODO
+    if (idx < 0 || idx >= this->nChild)
+        return NULL;
+    return this->childrens[idx];
+>>>>>>> origin/Programming-FPTree_v2
 }
 
 // get the key of this InnerNode
@@ -341,7 +374,7 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
     // TODO
-    if (this->n == this->degree * 2 - 1)
+    if (this->n == this->degree * 2)
         newChild = this->split();
     this->insertNonFull(k, v);
     return newChild;
@@ -351,10 +384,7 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 void LeafNode::insertNonFull(const Key &k, const Value &v)
 {
     // TODO
-    int i;
-    for (i = 0; i < this->degree * 2; i++)
-        if (!this->getBit(i))
-            break;
+    int i = findFirstZero();
     this->bitmap[i / 8] |= (1 << (7 - i % 8));
     this->kv[i].k = k;
     this->kv[i].v = v;
@@ -369,7 +399,10 @@ KeyNode *LeafNode::split()
     Key mid_key = findSplitKey();
 
     LeafNode *temp = LeafNode();
-    for (int i = 0; this->kv[i].k < mid_key; i++)
+    int i;
+    for (i = 0; this->kv[i].k <= mid_key; i++)
+        ;
+    for (; i < this->n; i++)
     {
         temp->insertNonFull(this->kv[i].k, this->kv[i].v);
         this->bitmap[i / 8] &= !(1 << (7 - i % 8));
@@ -441,6 +474,9 @@ bool LeafNode::update(const Key &k, const Value &v)
 Value LeafNode::find(const Key &k)
 {
     // TODO
+    for (int i = 0; i < this->degree * 2; i++)
+        if (this->getBit(i) && this->getKey(i) == k)
+            return this->getValue(i);
     return MAX_VALUE;
 }
 
@@ -448,6 +484,10 @@ Value LeafNode::find(const Key &k)
 int LeafNode::findFirstZero()
 {
     // TODO
+    int i;
+    for (i = 0; i < this->degree * 2; i++)
+        if (!this->getBit(i))
+            return i;
     return -1;
 }
 
@@ -456,6 +496,7 @@ int LeafNode::findFirstZero()
 void LeafNode::persist()
 {
     // TODO
+    pmem_persist(pmem_addr, calLeafSize());
 }
 
 // call by the ~FPTree(), delete the whole tree

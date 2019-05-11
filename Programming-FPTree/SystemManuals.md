@@ -406,11 +406,56 @@ Commands:
 | FPTreeDB所有剩下实现以及测试    | 5/31前           |
 
 ## 5 实验进度：
-已完成levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。（5/4前）  
-  
+levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。（5/4前）  
+
+FPTree键值存储系统插入和重载操作的实现。（5/11前）  
+```
 FPTreeDB插入操作：  
+（包括两方面的实现：中间索引节点（InnerNode）以及叶子节点（LeafNode））
 主要函数实现：  
+InnerNode构造函数：InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)  
+作用：给InnerNode建立一个存储空间并初始化FPTree中间索引节点InnerNode数据结构，其中参数d是FPTree的度，t是一颗FPTree，_isRoot判断节点是否为根节点，还需要初始化的是keys（索引项）  
+LeafNode构造函数：LeafNode::LeafNode(FPTree* t)  
+作用：给叶子节点建立一个空间用于存放键值对。  
+  
+InnerNode析构函数：InnerNode::~InnerNode()  
+作用：释放InnerNode的内存  
+LeafNode析构函数：LeafNode::~LeafNode()  
+作用：释放LeafNode的内存
+  
+二分查找函数：int InnerNode::findIndex(const Key& k)  
+k是输入的键，函数的作用是查找InnerNode中比k大的第一个键。  
+  
+InnerNode节点插入函数：void InnerNode::insertNonFull(const Key& k, Node* const& node)  
+k是键，node是InnerNode和LeafNode的父类对象，函数作用是当InnerNode节点不满时直接保持元素有序的插入。   
+LeafNode节点插入函数：void LeafNode::insertNonFull(const Key& k, const Value& v)  
+k是插入数据的键，v是插入数据的值，函数作用是当插入键值对后叶子节点不满时直接插入。  
+  
+键值对插入函数： 
+KeyNode* InnerNode::insert(Key k, Value v)  
+k是键值对的键，v是键值对的值。不进行实际的键值对插入，通过递归调用其子节点插入，函数返回KeyNode（包含插入子节点（键值对）的节点索引以及代表键值）给上层节点插入。  
+KeyNode* LeafNode::insert(Key k, Value v)  
+作用：执行数据的真正插入，主要操作是对文件的插入。  
+  
+InnerNode叶插入函数：KeyNode* InnerNode::insertLeaf(const KeyNode& leaf)  
+函数作用是当根节点满时将分裂后的新节点作为叶节点插入到FPTree。返回值是一个KeyNode。  
+  
+InnerNode分裂函数：KeyNode* InnerNode::split()  
+当插入键值对使LeafNode数超过范围时，父节点（索引节点）分裂，并将原来父节点的右半部分子节点分给新的节点，其他的给老节点。（调用LeafNode::split()函数）  
+LeafNode分裂函数：KeyNode* LeafNode::split()  
+叶子节点满时分裂，同时索引节点也要分裂。
+  
+LeafNode分裂后查找键函数：Key LeafNode::findSplitKey()  
+找到LeafNode分裂后中间值的key。  
 
+```
+```
 FPTreeDB重载操作：  
-主要函数实现：
+主要函数实现：  
+LeafNode::LeafNode(PPointer p, FPTree* t)  
+作用：用特定的持久化指针p重载叶子节点（需要调用PAllocator）  
+  
+树重载函数：bool FPTree::bulkLoading()  
+作用：遍历叶链并批量加载叶子文件重载FPTree，调用PAllocator，如果没有树被重载，则返回FALSE.  
 
+```
