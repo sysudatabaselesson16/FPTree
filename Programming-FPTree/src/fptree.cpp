@@ -106,6 +106,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
     newChild = this->childrens[temp]->insert(k, v);
     if (newChild != NULL)
         insertNonFull(newChild->key, newChild->node);
+    newChild = NULL;
     if (nKeys == 2 * this->degree + 1)
     {
         if (this->isRoot)
@@ -116,6 +117,10 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
             temp->insertNonFull(k, (Node *)this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
+        }
+        else
+        {
+            newChild = split();
         }
     }
 
@@ -132,13 +137,53 @@ KeyNode *InnerNode::insertLeaf(const KeyNode &leaf)
     if (this->isRoot && this->nKeys == 0)
     {
         // TODO
+        if (nChild == 0)
+        {
+            this->childrens[this->nChild++] = leaf.node;
+        }
+        else
+        {
+            this->childrens[this->nChild++] = leaf.node;
+            this->keys[this->nKeys++] = leaf.key;
+        }
         return newChild;
     }
-
     // recursive insert
     // Tip: please judge whether this InnerNode is full
     // next level is not leaf, just insertLeaf
     // TODO
+    if (!this->childrens[this->nChild - 1]->ifLeaf())
+    {
+        InnerNode *kk = (InnerNode *)this->childrens[this->nChild - 1];
+        newChild = kk->insertLeaf(leaf);
+        if (newChild != NULL)
+        {
+            this->childrens[this->nChild++] = newChild->node;
+            this->keys[this->nKeys++] = newChild->key;
+        }
+    }
+    else
+    {
+        this->childrens[this->nChild++] = leaf.node;
+        this->keys[this->nKeys++] = leaf.key;
+    }
+    newChild = NULL;
+    if (nKeys == 2 * this->degree + 1)
+    {
+        if (this->isRoot)
+        {
+            this->isRoot = false;
+            newChild = split();
+            InnerNode *temp = new InnerNode(this->degree, this->tree, true);
+            temp->insertNonFull(leaf.key, (Node *)this);
+            temp->insertNonFull(newChild->key, newChild->node);
+            this->tree->changeRoot(temp);
+        }
+        else
+        {
+            newChild = split();
+        }
+    }
 
     // next level is leaf, insert to childrens array
     // TODO
@@ -595,5 +640,15 @@ void FPTree::printTree()
 bool FPTree::bulkLoading()
 {
     // TODO
+    PPointer temp = PAllocator::getAllocator()->getStartPointer();
+    while (temp.fileId != 0)
+    {
+        LeafNode *leaf1 = new LeafNode(temp, this);
+        KeyNode leaf;
+        leaf.key = leaf1->getKey(0);
+        leaf.node = (Node *)leaf1;
+        this->root->insertLeaf(leaf);
+        temp = leaf1->pNext[0];
+    }
     return false;
 }
