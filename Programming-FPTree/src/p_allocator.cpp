@@ -62,8 +62,11 @@ PAllocator::PAllocator()
             {
                 maxFileId = 1;
                 freeNum = 0;
+                startLeaf.fileId = 1;
+                startLeaf.offset = LEAF_GROUP_HEAD + (LEAF_GROUP_AMOUNT - 1) * calLeafSize();
                 f.write((char *)&maxFileId, sizeof(maxFileId));
                 f.write((char *)&freeNum, sizeof(freeNum));
+                f.write((char *)&startLeaf, sizeof(startLeaf));
                 f.close();
             }
         }
@@ -99,7 +102,7 @@ PAllocator::~PAllocator()
 // memory map all leaves to pmem address, storing them in the fId2PmAddr
 void PAllocator::initFilePmemAddr()
 {
-    int PMEM_LEN = LEAF_GROUP_HEAD + LEAF_GROUP_AMOUNT * (sizeof(Key) + sizeof(Value)); //pmem应该分配大小,也就是leaf_group大小
+    int PMEM_LEN = LEAF_GROUP_HEAD + LEAF_GROUP_AMOUNT * calLeafSize(); //pmem应该分配大小,也就是leaf_group大小
     for (int i = 1; i < maxFileId; i++)
     {
         char *pmemaddr;
@@ -112,9 +115,7 @@ void PAllocator::initFilePmemAddr()
             perror("pmem_map_file");
             exit(1);
         }
-
         fId2PmAddr[i] = pmemaddr;           //保存虚拟地址跟fileId的映射
-        pmem_persist(pmemaddr, mapped_len); //持久化指针
     }
     // TODO
 }
@@ -140,11 +141,10 @@ bool PAllocator::getLeaf(PPointer &p, char *&pmem_addr)
         p.offset = freeList[freeNum - 1].offset;
         p.fileId = freeList[freeNum - 1].fileId;
 
-        pmem_addr = fId2PmAddr[p.fileId];
+        char *temp = fId2PmAddr[p.fileId];
 
-        pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 1; //将leaf_group中对应leaf的bitmap位置置为1,标志used, 这里计算bitmap位置的式子有点奇怪是因为offset内容是直接跟leaf在leaf_group位置挂钩的,要先算它是第几个leaf,再加上sizeof(uint64_t)
-        ((uint64_t *)pmem_addr)[0] += 1;                                                //leaf_group usednum++
-        pmem_persist(pmem_addr, mapped_len);
+        temp[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 1; //将leaf_group中对应leaf的bitmap位置置为1,标志used, 这里计算bitmap位置的式子有点奇怪是因为offset内容是直接跟leaf在leaf_group位置挂钩的,要先算它是第几个leaf,再加上sizeof(uint64_t)
+        ((uint64_t *)temp)[0] += 1;                                                //leaf_group usednum++
         pmem_addr = getLeafPmemAddr(p); //最终要的是叶的虚拟地址
         freeNum--;
         freeList.pop_back();
@@ -158,8 +158,8 @@ bool PAllocator::ifLeafUsed(PPointer p)
     // TODO
     if (ifLeafExist(p))
     {
-        char *pmem_addr = fId2PmAddr[p.fileId];
-        return pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] == 1;
+        char *temp = fId2PmAddr[p.fileId];
+        return temp[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] == 1;
     }
 
     return false;
@@ -189,9 +189,9 @@ bool PAllocator::freeLeaf(PPointer p)
     // TODO
     if (ifLeafExist(p) && ifLeafUsed(p) && !ifLeafFree(p))
     {
-        char *pmem_addr = fId2PmAddr[p.fileId];
-        pmem_addr[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 0;
-        ((uint64_t *)pmem_addr)[0] -= 1;
+        char *temp = fId2PmAddr[p.fileId];
+        temp[sizeof(uint64_t) + (p.offset - LEAF_GROUP_HEAD) / calLeafSize()] = 0;
+        ((uint64_t *)temp)[0] -= 1;
         freeList.push_back(p);
         freeNum++;
         return true;
