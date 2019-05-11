@@ -411,6 +411,7 @@ levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文�
 FPTree键值存储系统插入和重载操作的实现。（5/11前）  
 ```
 FPTreeDB插入操作：  
+（包括两方面的实现：中间索引节点（InnerNode）以及叶子节点（LeafNode））
 主要函数实现：  
 InnerNode构造函数：InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)  
 作用：给InnerNode建立一个存储空间并初始化FPTree中间索引节点InnerNode数据结构，其中参数d是FPTree的度，t是一颗FPTree，_isRoot判断节点是否为根节点，还需要初始化的是keys（索引项）  
