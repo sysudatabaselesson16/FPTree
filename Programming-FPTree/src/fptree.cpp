@@ -35,7 +35,24 @@ int InnerNode::findIndex(const Key &k)
 // WARNING: can not insert when it has no entry
 void InnerNode::insertNonFull(const Key &k, Node *const &node)
 {
-    // TODO
+    // DOING
+    if (nChild == 0)
+    {
+        this->childrens[nChild++] = node;
+        return;
+    }
+    KeyNode *newChild = NULL;
+    int temp = findIndex(k);
+    for (int i = this->nKeys; i > temp; i--)
+    {
+        keys[i] = keys[i - 1];
+        childrens[i + 1] = childrens[i];
+    }
+    this->nKeys++;
+    this->nChild++;
+    this->keys[temp] = k;
+    this->childrens[temp + 1] = node;
+    return;
 }
 
 // insert func
@@ -44,15 +61,43 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
 
-    // 1.insertion to the first leaf(only one leaf)
+    // 1.insertion to the first leaf(oenly one laf)
     if (this->isRoot && this->nKeys == 0)
     {
-        // TODO
+        // DOING
+        if (nChild == 0)
+        {
+            LeafNode *temp = LeafNode(this->tree);
+            this->childrens[nChild++] = temp;
+        }
+        newChild = this->childrens[nChild - 1]->insert(k, v);
+        if (newChild != NULL)
+        {
+            this->keys[nKeys++] = newChild->key;
+            this->childrens[nChild++] = newChild->node;
+        }
         return newChild;
     }
 
     // 2.recursive insertion
-    // TODO
+    // DOING
+    int temp = findIndex(k);
+    newChild = this->childrens[temp]->insert(k, v);
+    if (newChild != NULL)
+        insertNonFull(newChild->key, newChild->node);
+    if (nKeys == 2 * this->degree + 1)
+    {
+        if (this->isRoot)
+        {
+            this->isRoot = false;
+            newChild = split();
+            InnerNode *temp = InnerNode(this->degree, this->tree, true);
+            temp->insertNonFull(k, this);
+            temp->insertNonFull(newChild->key, newChild->node);
+            this->tree->changeRoot(temp);
+        }
+    }
+
     return newChild;
 }
 
@@ -84,8 +129,18 @@ KeyNode *InnerNode::split()
 {
     KeyNode *newChild = new KeyNode();
     // right half entries of old node to the new node, others to the old node.
-    // TODO
-
+    // DOING
+    InnerNode *temp = InnerNode(this->degree, this->tree, this->isRoot);
+    newChild->key = this->keys[this->degree];
+    newchild->node = temp;
+    this->nKeys = this->degree;
+    this->nChild = this->degree + 1;
+    temp->nKeys = this->degree;
+    temp->nChild = this->degree + 1;
+    for (int i = 0; i <= this->degree; i++)
+    {
+        temp->insertNonFull(this->key[i + this->degree], this->childrens[i + this->degree + 1]);
+    }
     return newChild;
 }
 
@@ -170,7 +225,11 @@ Value InnerNode::find(const Key &k)
 // get the children node of this InnerNode
 Node *InnerNode::getChild(const int &idx)
 {
-    // TODO
+    // DOING
+    if (idx < this->nChild)
+    {
+        return this->childrens[idx];
+    }
     return NULL;
 }
 
