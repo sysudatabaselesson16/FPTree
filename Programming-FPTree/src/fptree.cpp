@@ -26,7 +26,19 @@ InnerNode::~InnerNode()
 int InnerNode::findIndex(const Key &k)
 {
     // TODO
-    return 0;
+    int from = 0, to = this->nKeys - 1;
+    if (k >= this->keys[to])
+        return -1;
+    while (from <= to)
+    {
+        if (to == 0 || this->keys[to - 1] <= k)
+            return to;
+        int mid = (from + to) / 2;
+        if (this->keys[mid] > k)
+            to = mid;
+        else if (this->keys[mid] < k)
+            from = mid + 1;
+    }
 }
 
 // insert the node that is assumed not full
@@ -312,7 +324,10 @@ KeyNode *LeafNode::split()
     Key mid_key = findSplitKey();
 
     LeafNode *temp = LeafNode();
-    for (int i = 0; this->kv[i].k < mid_key; i++)
+    int i;
+    for (i = 0; this->kv[i].k <= mid_key; i++)
+        ;
+    for (; i < this->n; i++)
     {
         temp->insertNonFull(this->kv[i].k, this->kv[i].v);
         this->bitmap[i / 8] &= !(1 << (7 - i % 8));
