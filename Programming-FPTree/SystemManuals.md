@@ -414,19 +414,19 @@ FPTreeDB插入操作：
 主要函数实现：  
 InnerNode构造函数：InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)  
 作用：初始化FPTree中间索引节点InnerNode数据结构，其中参数d是FPTree的度，t是一颗FPTree，_isRoot判断节点是否为根节点，还需要初始化的是keys（索引项）  
-InnerNode析构函数：InnerNode::~InnerNode()  
+####InnerNode析构函数：InnerNode::~InnerNode()  
 作用：释放InnerNode的内存  
-二分查找函数：int InnerNode::findIndex(const Key& k)  
+####二分查找函数：int InnerNode::findIndex(const Key& k)  
 k是输入的键，函数的作用是查找InnerNode中比k大的第一个键。  
-节点插入函数：void InnerNode::insertNonFull(const Key& k, Node* const& node)  
+####节点插入函数：void InnerNode::insertNonFull(const Key& k, Node* const& node)  
 k是键，node是InnerNode和LeafNode的父类对象，函数作用是当节点不满时直接保持元素有序的插入。   
-键值对插入函数：KeyNode* InnerNode::insert(Key k, Value v)  
+####键值对插入函数：KeyNode* InnerNode::insert(Key k, Value v)  
 k是键值对的键，v是键值对的值。函数的作用是返回KeyNode（包含插入子节点（键值对）的节点索引以及代表键值）给上层节点插入。  
-叶节点插入函数：KeyNode* InnerNode::insertLeaf(const KeyNode& leaf)  
+####InnerNode叶节点插入函数：KeyNode* InnerNode::insertLeaf(const KeyNode& leaf)  
 函数作用是当根节点满时将分裂后的新节点作为叶节点插入到FPTree。返回值是一个KeyNode。  
-孩子节点分裂函数：KeyNode* InnerNode::split()  
+####孩子节点分裂函数：KeyNode* InnerNode::split()  
 当插入键值对使孩子节点数超过范围时，父节点（索引节点）分裂（调用changeRoot()函数），并将原来父节点的右半部分子节点分给新的节点，其他的给老节点。  
-根节点分裂函数：void FPTree::changeRoot()  
+####根节点分裂函数：void FPTree::changeRoot()  
 与insertNotFull()函数对应，函数作用是当根节点满时分裂，并产生新的根节点。
 ```
 ```
