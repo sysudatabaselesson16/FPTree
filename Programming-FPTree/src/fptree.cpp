@@ -82,7 +82,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
         if (nChild == 0)
         {
             LeafNode *temp = LeafNode(this->tree);
-            this->childrens[nChild++] = temp;
+            this->childrens[nChild++] = (Node *)temp;
         }
         newChild = this->childrens[nChild - 1]->insert(k, v);
         if (newChild != NULL)
@@ -106,7 +106,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
             this->isRoot = false;
             newChild = split();
             InnerNode *temp = InnerNode(this->degree, this->tree, true);
-            temp->insertNonFull(k, this);
+            temp->insertNonFull(k, (Node *)this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
         }
@@ -146,7 +146,7 @@ KeyNode *InnerNode::split()
     // DOING
     InnerNode *temp = InnerNode(this->degree, this->tree, this->isRoot);
     newChild->key = this->keys[this->degree];
-    newchild->node = temp;
+    newchild->node = (Node *)temp;
     this->nKeys = this->degree;
     this->nChild = this->degree + 1;
     temp->nKeys = this->degree;
