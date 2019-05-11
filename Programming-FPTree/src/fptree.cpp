@@ -28,7 +28,7 @@ int InnerNode::findIndex(const Key &k)
     // TODO
     int from = 0, to = this->nKeys - 1;
     if (k >= this->keys[to])
-        return -1;
+        return this->nKeys;
     while (from <= to)
     {
         if (to == 0 || this->keys[to - 1] <= k)
