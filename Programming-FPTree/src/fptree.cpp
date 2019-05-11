@@ -22,6 +22,12 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
 InnerNode::~InnerNode()
 {
     // DONIG
+    for (int i = 0; i < this->nChild; i++)
+    {
+        delete this->childrens[i];
+    }
+    delete this->childrens;
+    delete this->keys;
 }
 
 // binary search the first key in the innernode larger than input key
@@ -76,7 +82,6 @@ void InnerNode::insertNonFull(const Key &k, Node *const &node)
 KeyNode *InnerNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
-    
     // 1.insertion to the first leaf(oenly one laf)
     if (this->isRoot && this->nKeys == 0)
     {
@@ -108,7 +113,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
             this->isRoot = false;
             newChild = split();
             InnerNode *temp = new InnerNode(this->degree, this->tree, true);
-            temp->insertNonFull(k, this);
+            temp->insertNonFull(k, (Node *)this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
         }
@@ -148,7 +153,7 @@ KeyNode *InnerNode::split()
     // DOING
     InnerNode *temp = new InnerNode(this->degree, this->tree, this->isRoot);
     newChild->key = this->keys[this->degree];
-    newChild->node = temp;
+    newChild->node = (Node *)temp;
     this->nKeys = this->degree;
     this->nChild = this->degree + 1;
     temp->nKeys = this->degree;
@@ -302,7 +307,7 @@ void LeafNode::printNode()
 LeafNode::LeafNode(FPTree *t)
 {
     // TODO
-    
+
     this->tree = t;
     this->degree = LEAF_DEGREE;
     this->isLeaf = true;
