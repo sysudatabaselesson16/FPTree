@@ -413,7 +413,7 @@ FPTree键值存储系统插入和重载操作的实现。（5/11前）
 FPTreeDB插入操作：  
 主要函数实现：  
 InnerNode构造函数：InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)  
-作用：初始化FPTree中间索引节点InnerNode数据结构，其中参数d是FPTree的度，t是一颗FPTree，_isRoot判断节点是否为根节点，还需要初始化的是keys（索引项）  
+作用：初始化FPTree中间索引节点InnerNode数据结构，其中参数d是FPTree的度，t是一棵FPTree，_isRoot判断节点是否为根节点，还需要初始化的是keys（索引项）  
 InnerNode析构函数：InnerNode::~InnerNode()  
 ```
 ```
