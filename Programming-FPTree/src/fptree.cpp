@@ -1,4 +1,5 @@
 #include "fptree/fptree.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -81,7 +82,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
         // DOING
         if (nChild == 0)
         {
-            LeafNode *temp = LeafNode(this->tree);
+            LeafNode *temp = new LeafNode(this->tree);
             this->childrens[nChild++] = temp;
         }
         newChild = this->childrens[nChild - 1]->insert(k, v);
@@ -105,7 +106,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
         {
             this->isRoot = false;
             newChild = split();
-            InnerNode *temp = InnerNode(this->degree, this->tree, true);
+            InnerNode *temp = new InnerNode(this->degree, this->tree, true);
             temp->insertNonFull(k, this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
@@ -144,16 +145,16 @@ KeyNode *InnerNode::split()
     KeyNode *newChild = new KeyNode();
     // right half entries of old node to the new node, others to the old node.
     // DOING
-    InnerNode *temp = InnerNode(this->degree, this->tree, this->isRoot);
+    InnerNode *temp = new InnerNode(this->degree, this->tree, this->isRoot);
     newChild->key = this->keys[this->degree];
-    newchild->node = temp;
+    newChild->node = temp;
     this->nKeys = this->degree;
     this->nChild = this->degree + 1;
     temp->nKeys = this->degree;
     temp->nChild = this->degree + 1;
     for (int i = 0; i <= this->degree; i++)
     {
-        temp->insertNonFull(this->key[i + this->degree], this->childrens[i + this->degree + 1]);
+        temp->insertNonFull(this->keys[i + this->degree], this->childrens[i + this->degree + 1]);
     }
     return newChild;
 }
@@ -237,13 +238,12 @@ Value InnerNode::find(const Key &k)
     while (1)
     {
         int idx = temp->findIndex(k);
-        Node *tt = temp->getChild(idx);
-        if (tt == NULL)
+        if (temp->getChild(idx) == NULL)
             return MAX_VALUE;
-        if (tt->ifLeaf())
-            return tt->find(k);
+        if (temp->getChild(idx)->ifLeaf())
+            return temp->getChild(idx)->find(k);
         else
-            temp = tt;
+            temp = (InnerNode *)temp->getChild(idx);
     }
     return MAX_VALUE;
 }
@@ -302,9 +302,9 @@ LeafNode::LeafNode(FPTree *t)
 {
     // TODO
     this->tree = t;
-    this->degree = t->degree;
+    this->degree = LEAF_DEGREE;
     this->isLeaf = false;
-    if (!pAllocator->getLeaf(this->pPointer, this->pmem_addr))
+    if (!PAllocator::getAllocator()->getLeaf(this->pPointer, this->pmem_addr))
     {
         perror("cannot allocate a new lean\n");
         exit(1);
@@ -330,10 +330,10 @@ LeafNode::LeafNode(PPointer p, FPTree *t)
 {
     // TODO
     this->tree = t;
-    this->degree = t->degree;
+    this->degree = LEAF_DEGREE;
     this->isLeaf = false;
     this->pPointer = p;
-    if ((this->pmem_addr = getLeafPmemAddr(p)) == NULL)
+    if ((this->pmem_addr = PAllocator::getAllocator()->getLeafPmemAddr(p)) == NULL)
     {
         perror("PPointer not valid\n");
         exit(1);
@@ -356,7 +356,7 @@ LeafNode::LeafNode(PPointer p, FPTree *t)
 LeafNode::~LeafNode()
 {
     // TODO
-    mapped_len = calLeafSize();
+    int mapped_len = calLeafSize();
     pmem_unmap(this->pmem_addr, mapped_len);
 }
 
@@ -389,7 +389,7 @@ KeyNode *LeafNode::split()
     // TODO
     Key mid_key = findSplitKey();
 
-    LeafNode *temp = LeafNode();
+    LeafNode *temp = new LeafNode(this->tree);
     int i;
     for (i = 0; this->kv[i].k <= mid_key; i++)
         ;
@@ -409,11 +409,17 @@ KeyNode *LeafNode::split()
 // use to find a mediant key and delete entries less then middle
 // called by the split func to generate new leaf-node
 // qsort first then find
+
+static int cmp(const void *a, const void *b)
+{
+    return ((KeyValue *)a)->k > ((KeyValue *)b)->k;
+}
+
 Key LeafNode::findSplitKey()
 {
     Key midKey = 0;
     // TODO
-    sort(kv, kv + n, (const KeyValue &kv1, const KeyValue &kv2)[] { return kv1.k < kv2.k; });
+    qsort(kv, n, sizeof(KeyValue), cmp);
     midKey = kv[n / 2].k;
     return midKey;
 }
