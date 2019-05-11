@@ -21,7 +21,12 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
 // delete the InnerNode
 InnerNode::~InnerNode()
 {
-    // DONIG    
+    // DONIG
+    for (int i = 0; i < this->nChild; i++){
+        delete this->childrens[i];
+    }
+    delete this->childrens;
+    delete this->keys;    
 }
 
 // binary search the first key in the innernode larger than input key
