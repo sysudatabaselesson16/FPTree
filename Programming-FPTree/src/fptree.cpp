@@ -251,19 +251,10 @@ Value InnerNode::find(const Key &k)
 // get the children node of this InnerNode
 Node *InnerNode::getChild(const int &idx)
 {
-<<<<<<< HEAD
-    // DOING
-    if (idx < this->nChild)
-    {
-        return this->childrens[idx];
-    }
-    return NULL;
-=======
     // TODO
     if (idx < 0 || idx >= this->nChild)
         return NULL;
     return this->childrens[idx];
->>>>>>> origin/Programming-FPTree_v2
 }
 
 // get the key of this InnerNode
