@@ -12,6 +12,8 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
     this->isRoot = _isRoot;
     this->nKeys = 0;
     this->nChild = 0;
+    this->keys = NULL;
+    this->childrens = NULL;
 }
 
 // delete the InnerNode
@@ -397,6 +399,7 @@ int LeafNode::findFirstZero()
 void LeafNode::persist()
 {
     // TODO
+    pmem_persist(pmem_addr, calLeafSize());
 }
 
 // call by the ~FPTree(), delete the whole tree
