@@ -91,7 +91,7 @@ TEST(FPTreeTest, UpdateTest) {
     tree = NULL;
     removeFile();
 }
-
+*/
 TEST(FPTreeTest, BulkLoadingTwoLeaf) {
 
     PAllocator* pa = PAllocator::getAllocator();
@@ -100,7 +100,6 @@ TEST(FPTreeTest, BulkLoadingTwoLeaf) {
     for (int i = 1; i <= LEAF_DEGREE * 2; i++) {
         tree1->insert(i, i * 100);
     }
-
     EXPECT_EQ(pa->getFreeNum(), LEAF_GROUP_AMOUNT - 2);
     delete tree1;
     ifstream f1(file1);
@@ -108,10 +107,8 @@ TEST(FPTreeTest, BulkLoadingTwoLeaf) {
     f1.close();
     f1.clear();
     PAllocator::getAllocator()->~PAllocator();
-
     FPTree* tree2 = new FPTree(1);
     EXPECT_EQ(tree2->find(1), 100);
-
     removeFile();
 }
 
@@ -131,6 +128,7 @@ TEST(FPTreeTest, PersistLeaf) {
     removeFile();
 }
 
+
 TEST(FPTreeTest, BulkLoadingOneLeafGroup) {
     FPTree *tree = new FPTree(32);
     for (int i = 1; i < LEAF_DEGREE * 10; i++) {
@@ -145,7 +143,7 @@ TEST(FPTreeTest, BulkLoadingOneLeafGroup) {
 
     removeFile();
 }
-
+/*
 TEST(FPTreeTest, RemoveOneEntry) {
     FPTree* tree = new FPTree(4);
     for (int i = 1; i < 10; i++) {
