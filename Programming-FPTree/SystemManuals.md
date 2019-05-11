@@ -438,16 +438,14 @@ KeyNode* LeafNode::insert(Key k, Value v)
   
 InnerNode叶插入函数：KeyNode* InnerNode::insertLeaf(const KeyNode& leaf)  
 函数作用是当根节点满时将分裂后的新节点作为叶节点插入到FPTree。返回值是一个KeyNode。  
-
   
 InnerNode分裂函数：KeyNode* InnerNode::split()  
 当插入键值对使LeafNode数超过范围时，父节点（索引节点）分裂，并将原来父节点的右半部分子节点分给新的节点，其他的给老节点。（调用LeafNode::split()函数）  
 LeafNode分裂函数：KeyNode* LeafNode::split()  
 叶子节点满时分裂，同时索引节点也要分裂。
   
-
 LeafNode分裂后查找键函数：Key LeafNode::findSplitKey()  
-找到LeafNode分裂后产生的key。  
+找到LeafNode分裂后中间值的key。  
 
 ```
 ```
