@@ -272,6 +272,11 @@ void InnerNode::removeChild(const int &keyIdx, const int &childIdx)
 bool InnerNode::update(const Key &k, const Value &v)
 {
     // TODO
+    int pos = findIndex(k);
+    if(this->childrens[pos] != NULL)
+    {
+        return this->childrens[pos]->update(k,v);
+    }
     return false;
 }
 
