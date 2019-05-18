@@ -510,7 +510,7 @@ bool LeafNode::update(const Key &k, const Value &v)
     bool ifUpdate = false;
     // TODO
     for (int i = 0; i < this->degree * 2; i++) {
-    	if (this->getKey(i) == k) {
+    	if (this->getBit(i) && this->getKey(i) == k) {
     		this->kv[i].v = v;
     		if (this->getValue(i) == v)
     			ifUpdate = true;
