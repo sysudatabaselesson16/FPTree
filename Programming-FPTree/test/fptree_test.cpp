@@ -11,93 +11,104 @@ const string file2 = DATA_DIR + "2";
 const string file3 = DATA_DIR + "3";
 const string file4 = DATA_DIR + "4";
 
-void removeFile() {
+void removeFile()
+{
     PAllocator::getAllocator()->~PAllocator();
     remove(catalogPath.c_str());
     remove(file1.c_str());
     remove(freePath.c_str());
 }
 
-TEST(FPTreeTest, ReadLeaf) {
-    
+TEST(FPTreeTest, ReadLeaf)
+{
 }
 
-TEST(FPTreeTest, SingleInsert) {
-    FPTree* tree = new FPTree(2);
+TEST(FPTreeTest, SingleInsert)
+{
+    FPTree *tree = new FPTree(2);
     tree->insert(1, 100);
-    LeafNode* leaf = (LeafNode*)(tree->getRoot()->getChild(0));
+    LeafNode *leaf = (LeafNode *)(tree->getRoot()->getChild(0));
     EXPECT_NE(nullptr, leaf);
-    if (!leaf) {
+    if (!leaf)
+    {
         return;
     }
     EXPECT_EQ(leaf->find(1), 100);
     EXPECT_EQ(leaf->getPPointer().fileId, 1);
     EXPECT_EQ(leaf->getPPointer().offset, LEAF_GROUP_HEAD + calLeafSize() * (LEAF_GROUP_AMOUNT - 1));
-    LeafNode* t_leaf = new LeafNode(leaf->getPPointer(), NULL);
+    LeafNode *t_leaf = new LeafNode(leaf->getPPointer(), NULL);
     EXPECT_EQ(t_leaf->getBit(0), 1);
     EXPECT_EQ(t_leaf->find(1), 100);
     removeFile();
 }
 
-TEST(FPTreeTest, InsertOneLeaf) {
-    LeafNode* l1 = new LeafNode(NULL);
-    for (int i = 1; i <= LEAF_DEGREE; i++) {
+TEST(FPTreeTest, InsertOneLeaf)
+{
+    LeafNode *l1 = new LeafNode(NULL);
+    for (int i = 1; i <= LEAF_DEGREE; i++)
+    {
         // TODO: error, the insertion did not persist
         l1->insert(i, i * 10);
     }
-    ifstream f1(file1, ios::binary|ios::in);
+    ifstream f1(file1, ios::binary | ios::in);
     Byte bit1;
     f1.seekg(sizeof(uint64_t) + LEAF_GROUP_AMOUNT - 1, ios::beg);
-    f1.read((char*)&(bit1), sizeof(Byte));
+    f1.read((char *)&(bit1), sizeof(Byte));
     f1.close();
     EXPECT_EQ(bit1, 1);
 
-    LeafNode* t_l1 = new LeafNode(l1->getPPointer(), NULL);
+    LeafNode *t_l1 = new LeafNode(l1->getPPointer(), NULL);
     EXPECT_EQ(t_l1->find(1), 10);
-    LeafNode* l2 = new LeafNode(NULL);
-    for (int i = LEAF_DEGREE + 1; i <= LEAF_DEGREE * 2; i++) {
+    LeafNode *l2 = new LeafNode(NULL);
+    for (int i = LEAF_DEGREE + 1; i <= LEAF_DEGREE * 2; i++)
+    {
         l2->insert(i, i * 10);
     }
     EXPECT_EQ(l1->getPPointer().offset, LEAF_GROUP_HEAD + calLeafSize() * (LEAF_GROUP_AMOUNT - 1));
     EXPECT_EQ(l2->getPPointer().offset, LEAF_GROUP_HEAD + calLeafSize() * (LEAF_GROUP_AMOUNT - 2));
-    LeafNode* t_l11 = new LeafNode(l1->getPPointer(), NULL);
-    LeafNode* t_l2 = new LeafNode(l2->getPPointer(), NULL);
+    LeafNode *t_l11 = new LeafNode(l1->getPPointer(), NULL);
+    LeafNode *t_l2 = new LeafNode(l2->getPPointer(), NULL);
     EXPECT_EQ(t_l11->find(1), 10);
     EXPECT_EQ(t_l2->find(LEAF_DEGREE + 1), 10 * (LEAF_DEGREE + 1));
 
     removeFile();
 }
 
-/*
-TEST(FPTreeTest, UpdateTest) {
+TEST(FPTreeTest, UpdateTest)
+{
     FPTree *tree = new FPTree(2);
-    for (int i = 1; i <= LEAF_DEGREE; i++) {
+    for (int i = 1; i <= LEAF_DEGREE; i++)
+    {
         tree->insert(i, i * 100);
     }
     delete tree;
     tree = NULL;
     tree = new FPTree(2);
-    for (int i = 1; i <= LEAF_DEGREE; i+=2) {
+    for (int i = 1; i <= LEAF_DEGREE; i += 2)
+    {
         EXPECT_EQ(tree->find(i), i * 100);
         EXPECT_EQ(tree->update(i, i * 200), true);
     }
     delete tree;
     tree = NULL;
     tree = new FPTree(2);
-    for (int i = 1; i <= LEAF_DEGREE; i++) {
+    for (int i = 1; i <= LEAF_DEGREE; i++)
+    {
         EXPECT_EQ(tree->find(i), i * 200);
     }
     delete tree;
     tree = NULL;
     removeFile();
 }
-*/
-TEST(FPTreeTest, BulkLoadingTwoLeaf) {
 
-    PAllocator* pa = PAllocator::getAllocator();
+TEST(FPTreeTest, BulkLoadingTwoLeaf)
+{
 
-    FPTree* tree1 = new FPTree(2);
-    for (int i = 1; i <= LEAF_DEGREE * 2; i++) {
+    PAllocator *pa = PAllocator::getAllocator();
+
+    FPTree *tree1 = new FPTree(2);
+    for (int i = 1; i <= LEAF_DEGREE * 2; i++)
+    {
         tree1->insert(i, i * 100);
     }
     EXPECT_EQ(pa->getFreeNum(), LEAF_GROUP_AMOUNT - 2);
@@ -107,13 +118,14 @@ TEST(FPTreeTest, BulkLoadingTwoLeaf) {
     f1.close();
     f1.clear();
     PAllocator::getAllocator()->~PAllocator();
-    FPTree* tree2 = new FPTree(1);
+    FPTree *tree2 = new FPTree(1);
     EXPECT_EQ(tree2->find(1), 100);
     removeFile();
 }
 
-TEST(FPTreeTest, PersistLeaf) {
-    LeafNode* leaf = new LeafNode(NULL);
+TEST(FPTreeTest, PersistLeaf)
+{
+    LeafNode *leaf = new LeafNode(NULL);
     leaf->insertNonFull(1, 100);
     leaf->insertNonFull(2, 200);
     leaf->persist();
@@ -121,23 +133,25 @@ TEST(FPTreeTest, PersistLeaf) {
     PPointer p;
     p.fileId = 1;
     p.offset = LEAF_GROUP_HEAD + (LEAF_GROUP_AMOUNT - 1) * calLeafSize();
-    LeafNode* t_leaf = new LeafNode(p, NULL);
+    LeafNode *t_leaf = new LeafNode(p, NULL);
     EXPECT_EQ(t_leaf->find(1), 100);
     EXPECT_EQ(t_leaf->find(2), 200);
 
     removeFile();
 }
 
-
-TEST(FPTreeTest, BulkLoadingOneLeafGroup) {
+TEST(FPTreeTest, BulkLoadingOneLeafGroup)
+{
     FPTree *tree = new FPTree(32);
-    for (int i = 1; i < LEAF_DEGREE * 10; i++) {
+    for (int i = 1; i < LEAF_DEGREE * 10; i++)
+    {
         tree->insert(i, i * 10);
     }
     PAllocator::getAllocator()->~PAllocator();
     delete tree;
     FPTree *t_tree = new FPTree(2);
-    for (int i = 1; i < LEAF_DEGREE * 10; i++) {
+    for (int i = 1; i < LEAF_DEGREE * 10; i++)
+    {
         EXPECT_EQ(t_tree->find(i), i * 10);
     }
 
