@@ -13,19 +13,14 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
     this->isRoot = _isRoot;
     this->nKeys = 0;
     this->nChild = 0;
-    this->keys = NULL;
-    Node *temp;
-    this->childrens = &temp;
+    this->keys = new Key[d * 2 + 1];         //先分配一个足够大的空间方便后面直接使用
+    this->childrens = new Node *[d * 2 + 2]; //同上
 }
 
 // delete the InnerNode
 InnerNode::~InnerNode()
 {
     // DONIG
-    for (int i = 0; i < this->nChild; i++)
-    {
-        delete this->childrens[i];
-    }
     delete this->childrens;
     delete this->keys;
 }
@@ -34,18 +29,23 @@ InnerNode::~InnerNode()
 int InnerNode::findIndex(const Key &k)
 {
     // TODO
-    int from = 0, to = this->nKeys - 1;
+    //二分查找,结点key>k的在它的左孩子找,key<=k在右孩子找
+    int from = 0, to = nKeys - 1;
+    if (k < this->keys[0])
+        return 0;
     if (k >= this->keys[to])
-        return this->nKeys;
+        return to + 1;
     while (from <= to)
     {
-        if (to == 0 || this->keys[to - 1] <= k)
-            return to;
         int mid = (from + to) / 2;
-        if (this->keys[mid] > k)
+        if (keys[to - 1] < k)
+            return to;
+        if (keys[mid] < k)
+            from = mid;
+        else if (keys[mid] > k)
             to = mid;
-        else if (this->keys[mid] < k)
-            from = mid + 1;
+        else if (keys[mid] == k)
+            return mid + 1;
     }
 }
 
@@ -99,7 +99,6 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
         }
         return newChild;
     }
-
     // 2.recursive insertion
     // DOING
     int temp = findIndex(k);
@@ -201,8 +200,8 @@ KeyNode *InnerNode::split()
     newChild->node = (Node *)temp;
     this->nKeys = this->degree;
     this->nChild = this->degree + 1;
-    temp->nKeys = this->degree;
-    temp->nChild = this->degree + 1;
+    temp->nKeys = 0;
+    temp->nChild = 0;
     for (int i = 0; i <= this->degree; i++)
     {
         temp->insertNonFull(this->keys[i + this->degree], this->childrens[i + this->degree + 1]);
@@ -218,6 +217,68 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
     bool ifRemove = false;
     // only have one leaf
     // TODO
+    if (nChild == 1)
+    {
+        bool ifD = false;
+        ifRemove = this->remove(k, 0, this, ifD);
+        if (ifD)
+        {
+            childrens[0] = NULL;
+            nChild--;
+        }
+    }
+    else
+    {
+        bool ifD = false;
+        int temp = findIndex(k);
+        ifRemove = this->remove(k, temp, this, ifD);
+        if (ifD)
+        {
+            if (nKeys < degree && !isRoot)
+            {
+                InnerNode *p;
+                InnerNode *lb;
+                InnerNode *rb;
+                this->getBrother(temp, p, lb, rb);
+                if (p->getIsRoot() && p->getChildNum() == 2)
+                {
+                    if (rb != NULL)
+                    {
+                        mergeParentRight(p, rb);
+                        ifDelete = true;
+                    }
+                    if (lb != NULL)
+                    {
+                        mergeParentLeft(p, lb);
+                        ifDelete = true;
+                    }
+                }
+                else
+                {
+                    if (rb != NULL && rb->getKeyNum() > degree)
+                    {
+                        this->redistributeRight(index, rb, p);
+                    }
+                    else if (lb != NULL && lb->getKeyNum() > degree)
+                    {
+                        this->redistributeLeft(index - 1, lb, p);
+                    }
+                    else if (rb != NULL)
+                    {
+                        this->mergeRight(rb, parent->getKey(index));
+                        parent->removeChild(index, index);
+                        ifDelete = true;
+                    }
+                    else if (lb != NULL)
+                    {
+                        this->mergeLeft(lb, parent->getKey(index - 1));
+                        parent->removeChild(index, index - 1);
+                        ifDelete = true;
+                    }
+                }
+            }
+        }
+    }
 
     // recursive remove
     // TODO
@@ -278,6 +339,11 @@ void InnerNode::removeChild(const int &keyIdx, const int &childIdx)
 bool InnerNode::update(const Key &k, const Value &v)
 {
     // TODO
+    int pos = findIndex(k);
+    if (this->childrens[pos] != NULL)
+    {
+        return this->childrens[pos]->update(k, v);
+    }
     return false;
 }
 
@@ -288,13 +354,13 @@ Value InnerNode::find(const Key &k)
     InnerNode *temp = this;
     while (1)
     {
-        int idx = temp->findIndex(k);
-        if (temp->getChild(idx) == NULL)
+        int idx = temp->findIndex(k);    //idx是接下来查找的孩子序号
+        if (temp->getChild(idx) == NULL) //不存在返回MAX_VALUE
             return MAX_VALUE;
-        if (temp->getChild(idx)->ifLeaf())
+        if (temp->getChild(idx)->ifLeaf()) //存在且是叶子结点,在叶子结点中找
             return temp->getChild(idx)->find(k);
         else
-            temp = (InnerNode *)temp->getChild(idx);
+            temp = (InnerNode *)temp->getChild(idx); //存在且不是叶子结点,递归往下找
     }
     return MAX_VALUE;
 }
@@ -352,10 +418,11 @@ void LeafNode::printNode()
 LeafNode::LeafNode(FPTree *t)
 {
     // TODO
+
     this->tree = t;
-    this->degree = LEAF_DEGREE;
-    this->isLeaf = false;
-    if (!PAllocator::getAllocator()->getLeaf(this->pPointer, this->pmem_addr))
+    this->degree = LEAF_DEGREE; //叶子结点的degree是固定好的LEAF_DEGREE
+    this->isLeaf = true;
+    if (!PAllocator::getAllocator()->getLeaf(this->pPointer, this->pmem_addr)) //分配叶子的NVM地址
     {
         perror("cannot allocate a new lean\n");
         exit(1);
@@ -382,9 +449,9 @@ LeafNode::LeafNode(PPointer p, FPTree *t)
     // TODO
     this->tree = t;
     this->degree = LEAF_DEGREE;
-    this->isLeaf = false;
+    this->isLeaf = true;
     this->pPointer = p;
-    if ((this->pmem_addr = PAllocator::getAllocator()->getLeafPmemAddr(p)) == NULL)
+    if ((this->pmem_addr = PAllocator::getAllocator()->getLeafPmemAddr(p)) == NULL) //根据p找到对应NVM地址
     {
         perror("PPointer not valid\n");
         exit(1);
@@ -416,9 +483,10 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 {
     KeyNode *newChild = NULL;
     // TODO
-    if (this->n == this->degree * 2)
+    this->insertNonFull(k, v);       //先插入再判定满不满
+    if (this->n == this->degree * 2) //满则拆
         newChild = this->split();
-    this->insertNonFull(k, v);
+
     return newChild;
 }
 
@@ -426,10 +494,11 @@ KeyNode *LeafNode::insert(const Key &k, const Value &v)
 void LeafNode::insertNonFull(const Key &k, const Value &v)
 {
     // TODO
-    int i = findFirstZero();
+    int i = findFirstZero(); //先找到空槽位
     this->bitmap[i / 8] |= (1 << (7 - i % 8));
     this->kv[i].k = k;
     this->kv[i].v = v;
+    this->fingerprints[i] = keyHash(k);
     n++;
 }
 
@@ -442,18 +511,26 @@ KeyNode *LeafNode::split()
 
     LeafNode *temp = new LeafNode(this->tree);
     int i;
-    for (i = 0; this->kv[i].k <= mid_key; i++)
-        ;
-    for (; i < this->n; i++)
+    for (i = 0; this->kv[i].k < mid_key; i++)
+    {
+        this->fingerprints[i] = keyHash(this->kv[i].k); //前面findSplitKey对keyvalue进行qsort使fingerprints与key不对应,需重算fingerprint
+    }
+    int tn = this->n;
+    for (; i < tn; i++)
     {
         temp->insertNonFull(this->kv[i].k, this->kv[i].v);
-        this->bitmap[i / 8] &= !(1 << (7 - i % 8));
+        this->bitmap[i / 8] &= !(1 << (7 - i % 8)); //将原来的bitmap相应位置设为空槽
         this->n--;
     }
     this->next = temp;
     temp->prev = this;
-    newChild->key = mid_key;
+    newChild->key = mid_key; //midKey是分出来结点的第一个key值
     newChild->node = temp;
+    PPointer pp;
+    pp.fileId = this->pNext[0].fileId;
+    pp.offset = this->pNext[0].offset;
+    this->pNext[0] = temp->pPointer; //重构叶子结点的链表
+    temp->pNext[0] = pp;
     return newChild;
 }
 
@@ -515,6 +592,15 @@ bool LeafNode::update(const Key &k, const Value &v)
 {
     bool ifUpdate = false;
     // TODO
+    for (int i = 0; i < this->degree * 2; i++)
+    {
+        if (this->getBit(i) && this->getKey(i) == k)
+        {
+            this->kv[i].v = v;
+            if (this->getValue(i) == v)
+                ifUpdate = true;
+        }
+    }
     return ifUpdate;
 }
 
@@ -522,8 +608,9 @@ bool LeafNode::update(const Key &k, const Value &v)
 Value LeafNode::find(const Key &k)
 {
     // TODO
+    Byte fgp = keyHash(k);
     for (int i = 0; i < this->degree * 2; i++)
-        if (this->getBit(i) && this->getKey(i) == k)
+        if (this->getBit(i) && this->fingerprints[i] == fgp && this->getKey(i) == k) // 先找有空位的再找fingerprints再确定key是否确实相同
             return this->getValue(i);
     return MAX_VALUE;
 }
@@ -569,6 +656,7 @@ FPTree::FPTree(uint64_t t_degree)
     FPTree *temp = this;
     this->root = new InnerNode(t_degree, temp, true);
     this->degree = t_degree;
+    PAllocator::getAllocator();
     bulkLoading();
 }
 
@@ -639,6 +727,8 @@ void FPTree::printTree()
 bool FPTree::bulkLoading()
 {
     // TODO
+    if (PAllocator::getAllocator()->getMaxFileId() == 1)
+        return false;
     PPointer temp = PAllocator::getAllocator()->getStartPointer();
     while (temp.fileId != 0)
     {
