@@ -272,10 +272,17 @@ void InnerNode::removeChild(const int &keyIdx, const int &childIdx)
 bool InnerNode::update(const Key &k, const Value &v)
 {
     // TODO
-    int pos = findIndex(k);
-    if(this->childrens[pos] != NULL)
+    //根据find的方式来查找最后更新
+    InnerNode *temp = this;
+    while (1)
     {
-        return this->childrens[pos]->update(k,v);
+        int idx = temp->findIndex(k);    //idx是接下来查找的孩子序号
+        if (temp->getChild(idx) == NULL) //不存在返回false
+            return false;
+        if (temp->getChild(idx)->ifLeaf()) //存在且是叶子结点,在叶子结点中update
+            return temp->getChild(idx)->update(k, v);
+        else
+            temp = (InnerNode *)temp->getChild(idx); //存在且不是叶子结点,递归往下找
     }
     return false;
 }
@@ -350,7 +357,7 @@ void LeafNode::printNode()
 // new a empty leaf and set the valuable of the LeafNode
 LeafNode::LeafNode(FPTree *t)
 {
-    // TODO
+    // TODOTODO
 
     this->tree = t;
     this->degree = LEAF_DEGREE; //叶子结点的degree是固定好的LEAF_DEGREE
@@ -525,13 +532,13 @@ bool LeafNode::update(const Key &k, const Value &v)
 {
     bool ifUpdate = false;
     // TODO
+    Byte fgp = keyHash(k);
     for (int i = 0; i < this->degree * 2; i++)
     {
-        if (this->getBit(i) && this->getKey(i) == k)
+        if (this->getBit(i) && this->fingerprints[i] == fgp && this->getKey(i) == k)
         {
             this->kv[i].v = v;
-            if (this->getValue(i) == v)
-                ifUpdate = true;
+            ifUpdate = true;
         }
     }
     return ifUpdate;
