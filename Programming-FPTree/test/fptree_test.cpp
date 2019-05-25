@@ -92,7 +92,7 @@ TEST(FPTreeTest, UpdateTest)
     delete tree;
     tree = NULL;
     tree = new FPTree(2);
-    for (int i = 1; i <= LEAF_DEGREE; i++)
+    for (int i = 1; i <= LEAF_DEGREE; i += 2)
     {
         EXPECT_EQ(tree->find(i), i * 200);
     }
