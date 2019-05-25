@@ -247,7 +247,7 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
                 InnerNode *lb;
                 InnerNode *rb;
                 this->getBrother(temp, parent, lb, rb);
-                if (p->getIsRoot() && p->getChildNum() == 2)
+                if (parent->getIsRoot() && parent->getChildNum() == 2)
                 {
                     if (rb != NULL)
                     {
@@ -299,12 +299,12 @@ void InnerNode::getBrother(const int &index, InnerNode *const &parent, InnerNode
 {
     // TODO
     if (index != 0) // 如果不是最左边
-        leftBro = parent->getChild(index - 1);
+        leftBro =(InnerNode*)parent->getChild(index - 1);
     else
         leftBro = NULL;
 
     if (index < parent->getChildNum() - 1) // 如果不是最右边
-        rightBro = parent->getChild(index + 1);
+        rightBro =(InnerNode*) parent->getChild(index + 1);
     else
         rightBro = NULL;
 }
