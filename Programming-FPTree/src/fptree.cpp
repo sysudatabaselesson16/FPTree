@@ -1,5 +1,6 @@
 #include "fptree/fptree.h"
 #include <algorithm>
+#include <queue>
 
 using namespace std;
 
@@ -220,7 +221,9 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
     if (nChild == 1) // 如果只有一个叶子节点(根节点才有的情况)
     {
         bool ifD = false;
-        ifRemove = this->remove(k, 0, this, ifD); // 传递是否删除成功
+        // this->tree->printTree();
+        ifRemove = this->childrens[0]->remove(k, 0, this, ifD); // 传递是否删除成功
+        // this->tree->printTree();
         if (ifD)
         {
             childrens[0] = NULL;
@@ -231,7 +234,7 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
     {
         bool ifD = false;
         int temp = findIndex(k);
-        ifRemove = this->remove(k, temp, this, ifD); // 传递是否删除成功
+        ifRemove = this->childrens[temp]->remove(k, temp, this, ifD); // 传递是否删除成功
         if (ifD)                                     // 若孩子节点需要删除
         {
             if (temp == nKeys - 1)
@@ -242,11 +245,11 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
             {
                 removeChild(temp, temp);
             }
-            if (nKeys < degree && !isRoot)
+            if (nKeys < degree && !this->isRoot)
             {
                 InnerNode *lb;
                 InnerNode *rb;
-                this->getBrother(temp, parent, lb, rb);
+                this->getBrother(index, parent, lb, rb);
                 if (parent->getIsRoot() && parent->getChildNum() == 2)
                 {
                     if (rb != NULL)
@@ -299,12 +302,11 @@ void InnerNode::getBrother(const int &index, InnerNode *const &parent, InnerNode
 {
     // TODO
     if (index != 0) // 如果不是最左边
-        leftBro =(InnerNode*)parent->getChild(index - 1);
+        leftBro = (InnerNode *)parent->getChild(index - 1);
     else
         leftBro = NULL;
-
-    if (index < parent->getChildNum() - 1) // 如果不是最右边
-        rightBro =(InnerNode*) parent->getChild(index + 1);
+    if (index < (parent->getChildNum() - 1)) // 如果不是最右边
+        rightBro = (InnerNode *)parent->getChild(index + 1);
     else
         rightBro = NULL;
 }
@@ -313,12 +315,39 @@ void InnerNode::getBrother(const int &index, InnerNode *const &parent, InnerNode
 void InnerNode::mergeParentLeft(InnerNode *const &parent, InnerNode *const &leftBro)
 {
     // TODO
+    int i;
+    for (i = this->nKeys + leftBro->nKeys + 1; i >= leftBro->nKeys + 2; i--)
+        parent->keys[i] = this->keys[i - leftBro->nKeys - 2];
+    parent->keys[i--] = parent->keys[0];
+    for (; i >= 2; i--)
+        parent->keys[i] = leftBro->keys[i - 1];
+    parent->keys[0] = leftBro->keys[0];
+    parent->nKeys = this->nKeys + leftBro->nKeys + 2;
+    for (i = this->nChild + leftBro->nChild; i >= leftBro->nChild + 1; i--)
+        parent->childrens[i] = this->childrens[i - leftBro->nChild - 1];
+    for (; i >= 2; i--)
+        parent->childrens[i] = leftBro->childrens[i - 1];
+    parent->childrens[0] = leftBro->childrens[0];
+    parent->nChild = this->nChild + leftBro->nChild + 1;
 }
 
 // merge this node, its parent and right brother(parent is root)
 void InnerNode::mergeParentRight(InnerNode *const &parent, InnerNode *const &rightBro)
 {
     // TODO
+    //mergeParentRight将当前结点和右兄弟merge到根结点,同时保留当前结点到根节点的对应位置,使得最终该结点可以被delete
+    int i;
+    for (i = this->nKeys + rightBro->nKeys + 1; i >= this->nKeys + 2; i--)
+        parent->keys[i] = rightBro->keys[i - this->nKeys - 2];
+    parent->keys[i--] = parent->keys[0];
+    for (; i >= 1; i--)
+        parent->keys[i] = this->keys[i - 1];
+    parent->nKeys = this->nKeys + rightBro->nKeys + 2;
+    for (i = this->nChild + rightBro->nChild; i >= this->nChild + 1; i--)
+        parent->childrens[i] = rightBro->childrens[i - this->nChild - 1];
+    for (; i >= 1; i--)
+        parent->childrens[i] = this->childrens[i - 1];
+    parent->nChild = this->nChild + rightBro->nChild + 1;
 }
 
 // this node and its left brother redistribute
@@ -326,6 +355,15 @@ void InnerNode::mergeParentRight(InnerNode *const &parent, InnerNode *const &rig
 void InnerNode::redistributeLeft(const int &index, InnerNode *const &leftBro, InnerNode *const &parent)
 {
     // TODO
+    for (int i = this->nKeys; i > 0; i--)
+        this->keys[i] = this->keys[i - 1];
+    this->keys[0] = parent->keys[index];
+    parent->keys[index] = leftBro->keys[--leftBro->nKeys];
+    for (int i = this->nChild; i > 0; i--)
+        this->childrens[i] = this->childrens[i - 1];
+    this->childrens[0] = leftBro->childrens[--leftBro->nChild];
+    this->nChild++;
+    this->nKeys++;
 }
 
 // this node and its right brother redistribute
@@ -333,24 +371,60 @@ void InnerNode::redistributeLeft(const int &index, InnerNode *const &leftBro, In
 void InnerNode::redistributeRight(const int &index, InnerNode *const &rightBro, InnerNode *const &parent)
 {
     // TODO
+    this->keys[this->nKeys++] = parent->keys[index];
+    this->childrens[this->nChild++] = rightBro->childrens[0];
+    parent->keys[index] = rightBro->keys[0];
+    rightBro->nKeys--;
+    rightBro->nChild--;
+    for (int i = 0; i < rightBro->nKeys; i++)
+        rightBro->keys[i] = rightBro->keys[i + 1];
+    for (int i = 0; i < rightBro->nChild; i++)
+        rightBro->childrens[i] = rightBro->childrens[i + 1];
 }
 
 // merge all entries to its left bro, delete this node after merging.
 void InnerNode::mergeLeft(InnerNode *const &leftBro, const Key &k)
 {
     // TODO
+    leftBro->keys[leftBro->nKeys] = k;
+    int i;
+    for (i = leftBro->nKeys + 1; i < leftBro->nKeys + this->nKeys + 1; i++)
+        leftBro->keys[i] = this->keys[i - leftBro->nKeys - 1];
+    for (i = leftBro->nChild; i < leftBro->nChild + this->nChild; i++)
+        leftBro->childrens[i] = this->childrens[i - leftBro->nChild];
+    leftBro->nKeys += this->nKeys + 1;
+    leftBro->nChild += this->nChild;
 }
 
 // merge all entries to its right bro, delete this node after merging.
 void InnerNode::mergeRight(InnerNode *const &rightBro, const Key &k)
 {
     // TODO
+    int i;
+    for (i = this->nKeys + rightBro->nKeys; i > this->nKeys; i--)
+        rightBro->keys[i] = rightBro->keys[i - this->nKeys - 1];
+    rightBro->keys[i--] = k;
+    for (; i >= 0; i--)
+        rightBro->keys[i] = this->keys[i];
+    for (i = this->nChild + rightBro->nChild - 1; i >= this->nChild; i--)
+        rightBro->childrens[i] = rightBro->childrens[i - this->nChild];
+    for (; i >= 0; i--)
+        rightBro->childrens[i] = this->childrens[i];
+    rightBro->nKeys += this->nKeys + 1;
+    rightBro->nChild += this->nChild;
 }
 
 // remove a children from the current node, used by remove func
 void InnerNode::removeChild(const int &keyIdx, const int &childIdx)
 {
     // TODO
+    delete this->childrens[childIdx];
+    for (int i = keyIdx; i < this->nKeys - 1; i++)
+        this->keys[i] = this->keys[i + 1];
+    for (int i = childIdx; i < this->nChild - 1; i++)
+        this->childrens[i] = this->childrens[i + 1];
+    this->nChild--;
+    this->nKeys--;
 }
 
 // update the target entry, return true if the update succeed.
@@ -537,7 +611,7 @@ KeyNode *LeafNode::split()
     for (; i < tn; i++)
     {
         temp->insertNonFull(this->kv[i].k, this->kv[i].v);
-        this->bitmap[i / 8] &= !(1 << (7 - i % 8)); //将原来的bitmap相应位置设为空槽
+        this->bitmap[i / 8] &= ~(1 << (7 - i % 8)); //将原来的bitmap相应位置设为空槽
         this->n--;
     }
     this->next = temp;
@@ -601,6 +675,27 @@ bool LeafNode::remove(const Key &k, const int &index, InnerNode *const &parent, 
 {
     bool ifRemove = false;
     // TODO
+    Byte fgp = keyHash(k);
+    for (int i = 0; i < this->degree * 2; i++)
+    {
+        if (this->getBit(i) && this->fingerprints[i] == fgp && this->getKey(i) == k)
+        {
+            this->bitmap[i / 8] &= ~(1 << (7 - i % 8));
+            this->n--;
+            if (this->n == 0)
+            {
+                if (this->prev != NULL){
+                    this->prev->pNext = this->pNext;
+                    this->prev->next = this->next;
+                }
+                this->pNext = NULL;
+                this->pmem_addr = NULL;
+                PAllocator::getAllocator()->freeLeaf(((LeafNode *)(parent->getChild(index)))->getPPointer());
+                ifRemove = true;
+                ifDelete = true;
+            }
+        }
+    }
     return ifRemove;
 }
 
@@ -736,6 +831,24 @@ Value FPTree::find(Key k)
 void FPTree::printTree()
 {
     // TODO
+    if (root != NULL)
+    {
+        queue<Node *> q;
+        q.push(root);
+        while (!q.empty())
+        {
+            Node *temp = q.front();
+            temp->printNode();
+            q.pop();
+            if (!temp->ifLeaf())
+            {
+                InnerNode *ti = (InnerNode *)temp;
+                for (int i = 0; i < ti->getChildNum(); i++)
+                    q.push(ti->getChild(i));
+            }
+        }
+    }
+    cout << endl;
 }
 
 // bulkLoading the leaf files and reload the tree

@@ -157,7 +157,7 @@ TEST(FPTreeTest, BulkLoadingOneLeafGroup)
 
     removeFile();
 }
-/*
+
 TEST(FPTreeTest, RemoveOneEntry) {
     FPTree* tree = new FPTree(4);
     for (int i = 1; i < 10; i++) {
@@ -249,4 +249,3 @@ TEST(InnerNodeTest, MergeTest) {
     EXPECT_EQ(tree->getRoot()->getChildNum(), 4);
     removeFile();
 }
-*/
