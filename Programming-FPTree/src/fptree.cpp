@@ -22,8 +22,8 @@ InnerNode::InnerNode(const int &d, FPTree *const &t, bool _isRoot)
 InnerNode::~InnerNode()
 {
     // DONIG
-    delete this->keys;
     delete this->childrens;
+    delete this->keys;
 }
 
 // binary search the first key in the innernode larger than input key
@@ -106,6 +106,7 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
     newChild = this->childrens[temp]->insert(k, v);
     if (newChild != NULL)
         insertNonFull(newChild->key, newChild->node);
+    newChild = NULL;
     if (nKeys == 2 * this->degree + 1)
     {
         if (this->isRoot)
@@ -116,6 +117,10 @@ KeyNode *InnerNode::insert(const Key &k, const Value &v)
             temp->insertNonFull(k, (Node *)this);
             temp->insertNonFull(newChild->key, newChild->node);
             this->tree->changeRoot(temp);
+        }
+        else
+        {
+            newChild = split();
         }
     }
 
@@ -213,6 +218,77 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
     bool ifRemove = false;
     // only have one leaf
     // TODO
+    if (nChild == 1) // 如果只有一个叶子节点(根节点才有的情况)
+    {
+        bool ifD = false;
+        ifRemove = this->remove(k, 0, this, ifD); // 传递是否删除成功
+        if (ifD)
+        {
+            childrens[0] = NULL;
+            nChild--;
+        }
+    }
+    else
+    {
+        bool ifD = false;
+        int temp = findIndex(k);
+        ifRemove = this->remove(k, temp, this, ifD); // 传递是否删除成功
+        if (ifD)                                     // 若孩子节点需要删除
+        {
+            if (temp == nKeys - 1)
+            {
+                removeChild(temp - 1, temp);
+            }
+            else
+            {
+                removeChild(temp, temp);
+            }
+            if (nKeys < degree && !isRoot)
+            {
+                InnerNode *lb;
+                InnerNode *rb;
+                this->getBrother(temp, parent, lb, rb);
+                if (parent->getIsRoot() && parent->getChildNum() == 2)
+                {
+                    if (rb != NULL)
+                    {
+                        mergeParentRight(parent, rb);
+                        delete rb;
+                        rb = NULL;
+                        ifDelete = true;
+                    }
+                    if (lb != NULL)
+                    {
+                        mergeParentLeft(parent, lb);
+                        delete lb;
+                        lb = NULL;
+                        ifDelete = true;
+                    }
+                }
+                else
+                {
+                    if (rb != NULL && rb->getKeyNum() > degree)
+                    {
+                        this->redistributeRight(index, rb, parent);
+                    }
+                    else if (lb != NULL && lb->getKeyNum() > degree)
+                    {
+                        this->redistributeLeft(index - 1, lb, parent);
+                    }
+                    else if (rb != NULL)
+                    {
+                        this->mergeRight(rb, parent->getKey(index));
+                        ifDelete = true;
+                    }
+                    else if (lb != NULL)
+                    {
+                        this->mergeLeft(lb, parent->getKey(index - 1));
+                        ifDelete = true;
+                    }
+                }
+            }
+        }
+    }
 
     // recursive remove
     // TODO
@@ -223,8 +299,15 @@ bool InnerNode::remove(const Key &k, const int &index, InnerNode *const &parent,
 void InnerNode::getBrother(const int &index, InnerNode *const &parent, InnerNode *&leftBro, InnerNode *&rightBro)
 {
     // TODO
-    leftBro = parent->childrens[index - 1];
-    rightBro = parent->childrens[index + 1];
+    if (index != 0) // 如果不是最左边
+        leftBro = (InnerNode *)parent->getChild(index - 1);
+    else
+        leftBro = NULL;
+
+    if (index < parent->getChildNum() - 1) // 如果不是最右边
+        rightBro = (InnerNode *)parent->getChild(index + 1);
+    else
+        rightBro = NULL;
 }
 
 // merge this node, its parent and left brother(parent is root)
@@ -345,17 +428,10 @@ void InnerNode::removeChild(const int &keyIdx, const int &childIdx)
 bool InnerNode::update(const Key &k, const Value &v)
 {
     // TODO
-    //根据find的方式来查找最后更新
-    InnerNode *temp = this;
-    while (1)
+    int pos = findIndex(k);
+    if (this->childrens[pos] != NULL)
     {
-        int idx = temp->findIndex(k);    //idx是接下来查找的孩子序号
-        if (temp->getChild(idx) == NULL) //不存在返回false
-            return false;
-        if (temp->getChild(idx)->ifLeaf()) //存在且是叶子结点,在叶子结点中update
-            return temp->getChild(idx)->update(k, v);
-        else
-            temp = (InnerNode *)temp->getChild(idx); //存在且不是叶子结点,递归往下找
+        return this->childrens[pos]->update(k, v);
     }
     return false;
 }
@@ -430,7 +506,7 @@ void LeafNode::printNode()
 // new a empty leaf and set the valuable of the LeafNode
 LeafNode::LeafNode(FPTree *t)
 {
-    // TODOTODO
+    // TODO
 
     this->tree = t;
     this->degree = LEAF_DEGREE; //叶子结点的degree是固定好的LEAF_DEGREE
@@ -624,13 +700,13 @@ bool LeafNode::update(const Key &k, const Value &v)
 {
     bool ifUpdate = false;
     // TODO
-    Byte fgp = keyHash(k);
     for (int i = 0; i < this->degree * 2; i++)
     {
-        if (this->getBit(i) && this->fingerprints[i] == fgp && this->getKey(i) == k)
+        if (this->getBit(i) && this->getKey(i) == k)
         {
             this->kv[i].v = v;
-            ifUpdate = true;
+            if (this->getValue(i) == v)
+                ifUpdate = true;
         }
     }
     return ifUpdate;
