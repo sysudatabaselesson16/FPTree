@@ -92,12 +92,12 @@ libgtest_main.a : gtest-all.o gtest_main.o
 
 # ===============================TODO: all below=================================
 fptree.o : $(USER_DIR)/fptree.cpp $(USER_HEADER_DIR)/fptree/fptree.h $(USER_HEADER_DIR)/utility/p_allocator.h
-	$(CC) $(CFLAGS) -c $(USER_DIR)/fptree.cpp -I $(USER_HEADER_DIR) -lpmem
+	$(CC) $(CXXFLAGS) -c $(USER_DIR)/fptree.cpp -I $(USER_HEADER_DIR) -lpmem
 
 utility.o : $(USER_DIR)/utility.cpp $(USER_HEADER_DIR)/utility/utility.h $(USER_HEADER_DIR)/utility/clhash.h
-	$(CC) $(CFLAGS) -c $(USER_DIR)/utility.cpp -I $(USER_HEADER_DIR)
+	$(CC) $(CXXFLAGS) -c $(USER_DIR)/utility.cpp -I $(USER_HEADER_DIR)
 p_allocator.o : $(USER_DIR)/p_allocator.cpp $(USER_HEADER_DIR)/utility/p_allocator.h $(USER_HEADER_DIR)/utility/utility.h
-	$(CC) $(CFLAGS) -c $(USER_DIR)/p_allocator.cpp -I $(USER_HEADER_DIR) -lpmem
+	$(CC) $(CXXFLAGS) -c $(USER_DIR)/p_allocator.cpp -I $(USER_HEADER_DIR) -lpmem
 clhash.o : $(USER_DIR)/clhash.c $(USER_HEADER_DIR)/utility/clhash.h
 	$(CC) $(CFLAGS) -c $(USER_DIR)/clhash.c -I $(USER_HEADER_DIR) 
 
