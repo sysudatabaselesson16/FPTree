@@ -53,7 +53,7 @@ int main()
 
 	printf("Run phase begins\n");
 
-	int operation_num = 0;
+	int operation_num = 2200000;
     inserted = 0;		
     // TODO: read the ycsb_run
     ycsb_read = fopen("../workloads/220w-rw-50-50-run.txt", "r"); 
@@ -125,7 +125,7 @@ int main()
     printf("Load phase single insert time: %fns\n", single_time / inserted);
 
 	printf("Run phase begin\n");
-	operation_num = 0;
+	operation_num = 2200000;
     inserted = 0;		
     // TODO: read the ycsb_run
     ycsb_read = fopen("../workloads/220w-rw-50-50-run.txt", "r"); 
