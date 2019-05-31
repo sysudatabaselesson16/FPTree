@@ -1,7 +1,4 @@
-#include "../include/fptree/fptree.h"
-#include "fptree.cpp"
-#include "p_allocator.cpp"
-#include "utility.cpp"
+#include "fptree/fptree.h"
 #include <leveldb/db.h>
 #include <string>
 
