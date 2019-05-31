@@ -405,7 +405,52 @@ Commands:
 | FPTreeDB删除操作并通过相关测试  | 5/31前           |
 | FPTreeDB所有剩下实现以及测试    | 5/31前           |
 
-## 5 实验进度：
+## 5FPTree的安装与测试
+
+
+#### 下载
+
+```
+
+https://github.com/sysudatabaselesson16/FPTree.git
+
+```
+
+#### 编译
+
+```
+
+cd sysudatabaselesson16/FPTree/Programming-FPTree/src/fptree.cpp
+
+```
+
+#### 性能测试
+
+测试前注意将/mnt/mem目录设为pmem目录途径
+
+具体说明见fptree性能测试先进入Programming-FPTree/src目录，测试命令为
+
+```
+
+sudo make testfptree
+
+```
+
+#### google test测试
+
+测试前注意将mnt/mem目录设为pmem目录路径
+
+先进入Programming-FPTree/srcmulu .测试命令为（注意sudo）
+
+```
+
+make
+sudo ./bin/utility_test
+sudo ./bin/fptree_test
+
+```
+
+## 6 实验进度：
 levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。（5/4前）  
 
 FPTree键值存储系统插入和重载操作的实现。（5/11前）  
@@ -459,3 +504,7 @@ LeafNode::LeafNode(PPointer p, FPTree* t)
 作用：遍历叶链并批量加载叶子文件重载FPTree，调用PAllocator，如果没有树被重载，则返回FALSE.  
 
 ```
+
+FPTreeDB查询和更新操作及通过相关测试（5/18前）
+
+FPTreeDB删除操作及剩下所有实现及测试（5/31前）
