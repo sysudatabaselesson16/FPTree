@@ -6,12 +6,12 @@
 #define VALUE_LEN 8
 using namespace std;
 
-const string workload = ""; // TODO: the workload folder filepath
+const string workload = "../workloads"; // TODO: the workload folder filepath
 
-const string load = workload + ""; // TODO: the workload_load filename
-const string run  = workload + ""; // TODO: the workload_run filename
+const string load = workload + "220w-rw-50-50-load.txt"; // TODO: the workload_load filename
+const string run  = workload + "220w-rw-50-50-run.txt"; // TODO: the workload_run filename
 
-const int READ_WRITE_NUM = 0; // TODO: amount of operations
+const int READ_WRITE_NUM = 2200000; // TODO: amount of operations
 
 int main()
 {        
@@ -29,7 +29,15 @@ int main()
     printf("Load phase begins \n");
 
     // TODO: read the ycsb_load
-
+    ycsb = fopen("../workloads/220w-rw-50-50-load.txt", "r");
+    char op[7];//load the operations
+    if (ycsb == NULL) return 0;
+    for (t = 0; t < 2200000; t++) {
+        fscanf(ycsb, "%s %llu", op, &key[t]);
+        if (strcmp(op,"INSERT") == 0){
+            ifInsert[t] = true;
+        }
+    }
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: load the workload in the fptree
@@ -45,6 +53,16 @@ int main()
 	int operation_num = 0;
     inserted = 0;		
     // TODO: read the ycsb_run
+    ycsb_read = fopen("../workloads/220w-rw-50-50-run.txt", "r"); 
+    char op1[7];
+    if (ycsb_read == NULL) return 0;
+    for (t = 0; t < 2200000; t++) {
+        ifInsert[t] = false;
+        fscanf(ycsb_read, "%s %llu", op1, &key[t]);
+        if (strcmp(op1,"INSERT") == 0){
+        ifInsert[t] = true;
+        }
+    }
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: operate the fptree
@@ -65,11 +83,30 @@ int main()
     leveldb::Options options;
     leveldb::WriteOptions write_options;
     // TODO: initial the levelDB
+    leveldb::Status s = leveldb::DB::Open(options, "/tmp/testdb", &db);
+    assert(s.ok());
     inserted = 0;
     printf("Load phase begins \n");
     // TODO: read the ycsb_read
+    ycsb = fopen("../workloads/220w-rw-50-50-load.txt", "r");
+    char op2[7];//load the operations
+    if (ycsb == NULL) return 0;
+    for (t = 0; t < 2200000; t++) {
+        fscanf(ycsb, "%s %llu", op2, &key[t]);
+        if (strcmp(op2,"INSERT") == 0){
+            ifInsert[t] = true;
+        }
+    }
     clock_gettime(CLOCK_MONOTONIC, &start);
     // TODO: load the levelDB
+    for (t = 0; t < 2200000; t++) {//record the number of insert
+        if (ifInsert[t]) {
+	    inserted++;
+	}
+    //write operation
+    leveldb::Status s = db->Put(write_options, leveldb::Slice((char*)&key[t], KEY_LEN), leveldb::Slice((char*)&key[t], VALUE_LEN));
+    if (!s.ok()) printf("put failed!");
+    }
     clock_gettime(CLOCK_MONOTONIC, &finish);
 	single_time = (finish.tv_sec - start.tv_sec) * 1000000000.0 + (finish.tv_nsec - start.tv_nsec);
     printf("Load phase finishes: %d items are inserted \n", inserted);
@@ -80,11 +117,32 @@ int main()
 	operation_num = 0;
     inserted = 0;		
     // TODO: read the ycsb_run
+    ycsb_read = fopen("../workloads/220w-rw-50-50-run.txt", "r"); 
+    char op3[7];
+    if (ycsb_read == NULL) return 0;
+    for (t = 0; t < 2200000; t++) {
+        ifInsert[t] = false;
+        fscanf(ycsb_read, "%s %llu", op3, &key[t]);
+        if (strcmp(op3,"INSERT") == 0){
+        ifInsert[t] = true;
+        }
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: run the workload_run in levelDB
-
+    string val;//the par of read operation
+    for (t = 0; t < 2200000; t++) {
+        if (ifInsert[t]) {
+	    inserted++;
+	    leveldb::Status s1 = db->Put(write_options, leveldb::Slice((char*)&key[t], KEY_LEN), leveldb::Slice((char*)&key[t], VALUE_LEN));
+            if (!s1.ok()) printf("Put failed!");
+		}
+        else {
+	    leveldb::Status s2 = db->Get(leveldb::ReadOptions(), leveldb::Slice((char*)&key[t], KEY_LEN), &val);
+	    if (!s2.ok()) printf("Get failed!");
+        }
+    }
 	clock_gettime(CLOCK_MONOTONIC, &finish);
     fclose(ycsb_read);
 	single_time = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
