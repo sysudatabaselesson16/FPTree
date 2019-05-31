@@ -450,6 +450,20 @@ sudo ./bin/fptree_test
 
 ```
 
+#### levelDB的安装及测试
+
+
+![set1](./asset/levelDB_set1.png)
+
+![set2](./asset/levelDB_set2.png)
+
+![test](./asset/levelDB_test.png)
+
+#### levelDB和fptreeDB的对比测试
+
+![compare](./asset/compare_test.png)
+
+
 ## 6 实验进度：
 levelDB的环境配置和测试代码的编写以及nvm内存分配器的头文件（p_allocator.h）的编写。（5/4前）  
 
