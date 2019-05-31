@@ -18,6 +18,7 @@ int main()
     FPTree fptree(1028);
     uint64_t inserted = 0, queried = 0, t = 0;
     uint64_t* key = new uint64_t[2200000];
+    uint64_t* temp = new uint64_t[2200000];
     bool* ifInsert = new bool[2200000];
 	FILE *ycsb, *ycsb_read;
 	char *buf = NULL;
@@ -68,7 +69,15 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: operate the fptree
-
+    for (t = 0; t < 2200000; t++) {
+        if (ifInsert[t]) {
+	    inserted++;
+	    fptree.insert(key[t], key[t]);
+	}
+        else {
+            temp[t] = fptree.find(key[t]);
+        }
+    }
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 	single_time = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
     printf("Run phase finishes: %d/%d items are inserted/searched\n", inserted, operation_num - inserted);
