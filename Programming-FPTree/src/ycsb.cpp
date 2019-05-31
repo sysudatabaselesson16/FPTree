@@ -1,4 +1,7 @@
-#include "fptree/fptree.h"
+#include "../include/fptree/fptree.h"
+#include "fptree.cpp"
+#include "p_allocator.cpp"
+#include "utility.cpp"
 #include <leveldb/db.h>
 #include <string>
 
@@ -41,7 +44,9 @@ int main()
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     // TODO: load the workload in the fptree
-
+    for (t = 0; t < 2200000; t++) {
+        fptree.insert(key[t], key[t]);
+    }
     clock_gettime(CLOCK_MONOTONIC, &finish);
 	single_time = (finish.tv_sec - start.tv_sec) * 1000000000.0 + (finish.tv_nsec - start.tv_nsec);
     printf("Load phase finishes: %d items are inserted \n", inserted);
